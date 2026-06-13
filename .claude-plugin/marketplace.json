@@ -1,0 +1,16 @@
+{
+  "name": "agentstrap-v2",
+  "owner": {
+    "name": "mateim4"
+  },
+  "metadata": {
+    "description": "Single-plugin marketplace hosting AgentStrap v2."
+  },
+  "plugins": [
+    {
+      "name": "agentstrap",
+      "source": "./",
+      "description": "Workspace bootstrapper: idempotent scaffolding + sanity check, automatic cross-device handoffs, audit swarm, release pipeline."
+    }
+  ]
+}

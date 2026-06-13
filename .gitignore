@@ -1,0 +1,8 @@
+# OS / editor
+.DS_Store
+*.swp
+*~
+
+# Local scratch / test artifacts
+/tmp-test/
+*.local

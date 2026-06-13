@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentStrap install stamp (.agentstrap/manifest.json)",
+  "description": "Written by /agentstrap:bootstrap. Its presence flips a re-run into 'stamped' (sanity-check/upgrade) mode. Records exactly what bootstrap created so re-runs are a desired-vs-actual diff, never a clobber.",
+  "type": "object",
+  "required": ["agentstrap_version", "applied_at", "mode"],
+  "properties": {
+    "agentstrap_version": { "type": "string" },
+    "applied_at": { "type": "string", "description": "ISO-ish timestamp the bootstrap ran." },
+    "mode": { "type": "string", "enum": ["greenfield", "adopt"] },
+    "created": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Project-relative paths AgentStrap created (so upgrades touch only its own files)."
+    },
+    "conformed_to": {
+      "type": "object",
+      "description": "Existing conventions AgentStrap adapted to in adopt mode (rather than imposing template defaults).",
+      "properties": {
+        "domains": { "type": "array", "items": { "type": "string" } },
+        "handoff_file": { "type": "string" },
+        "delta_file": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentStrap project config (.agentstrap/config.json)",
+  "type": "object",
+  "required": ["version", "continuity"],
+  "properties": {
+    "version": { "type": "string", "description": "AgentStrap plugin version that wrote this config." },
+    "project": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "stage": { "type": "string", "enum": ["planning", "code"] },
+        "type": { "type": "string", "description": "Free-form, e.g. web-app, cli, library, docs." }
+      }
+    },
+    "continuity": {
+      "type": "object",
+      "description": "Read by the SessionStart/Stop/SessionEnd hooks.",
+      "required": ["vault_path", "handoff_file", "delta_file"],
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "vault_path": { "type": "string", "description": "Absolute or project-relative path to the git repo holding the handoff (usually the docs vault or project root)." },
+        "handoff_file": { "type": "string", "default": "HANDOFF.md", "description": "Path of HANDOFF.md relative to vault_path." },
+        "delta_file": { "type": "string", "default": "DELTA_TRACKING.md", "description": "Path of DELTA_TRACKING.md relative to vault_path." },
+        "push": { "type": "boolean", "default": true, "description": "If false, hooks write files but never git-push (rely entirely on an external committer)." },
+        "obsidian_enabled": { "type": "boolean", "default": false, "description": "If true and Obsidian is running, the Stop hook leaves pushing to obsidian-git (single-writer rule); SessionEnd still guarantees a safe push." }
+      }
+    },
+    "release": {
+      "type": "object",
+      "properties": {
+        "version_files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "field"],
+            "properties": {
+              "path": { "type": "string" },
+              "field": { "type": "string", "description": "JSON key, TOML key, or a regex tag identifying the version string." }
+            }
+          }
+        },
+        "build_command": { "type": "string" },
+        "test_command": { "type": "string" },
+        "artifact_dir": { "type": "string" }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "properties": {
+        "deployment_context": { "type": "string", "enum": ["air-gapped", "internal", "internet-facing"] }
+      }
+    }
+  }
+}

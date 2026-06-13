@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "agentstrap",
+  "version": "0.1.0",
+  "description": "Reusable Claude Code workspace bootstrapper: idempotent project scaffolding with a non-destructive sanity check, automatic cross-device session handoffs, an audit swarm, and a release pipeline.",
+  "author": {
+    "name": "mateim4"
+  }
+}
