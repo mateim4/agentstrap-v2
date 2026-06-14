@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-06-14
+
+### Fixed
+- Auto-state branch detection uses `git branch --show-current` (no more `HEAD`/`(no git)` leak on a repo with zero commits) — found in live bootstrap test.
+- "Last request" skips harness/skill-injected turns, so it captures the genuine user message.
+
 ## [0.1.1] — 2026-06-14
 
 ### Fixed

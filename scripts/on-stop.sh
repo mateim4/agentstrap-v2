@@ -20,7 +20,8 @@ mkdir -p "$(dirname "$AS_HANDOFF")" "$(dirname "$AS_DELTA")" 2>/dev/null || true
 TRANSCRIPT="$(as_input_field "$INPUT" transcript_path)"
 HOST="$(hostname 2>/dev/null || echo unknown)"
 NOW="$(date '+%F %T')"
-BRANCH="$(git -C "$AS_PROJ" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '(no git)')"
+BRANCH="$(git -C "$AS_PROJ" branch --show-current 2>/dev/null)"
+[ -n "$BRANCH" ] || BRANCH="$(git -C "$AS_PROJ" rev-parse --short HEAD 2>/dev/null || echo '(no commits yet)')"
 CHANGED="$(git -C "$AS_PROJ" status --porcelain 2>/dev/null | grep -c . )"
 
 LAST_USER="$(python3 - "$TRANSCRIPT" <<'PY' 2>/dev/null
@@ -37,8 +38,11 @@ try:
             c=m.get("content") if isinstance(m,dict) else None
             if isinstance(c,list):
                 c=" ".join(x.get("text","") for x in c if isinstance(x,dict))
-            if isinstance(c,str) and c.strip() and not c.strip().startswith("<"):
-                msg=c.strip().replace("\n"," ")
+            t=c.strip() if isinstance(c,str) else ""
+            # Skip harness/skill-injected turns (not genuine human input).
+            if (t and not t.startswith("<") and not t.startswith("#")
+                    and "for this skill" not in t and "Base directory" not in t):
+                msg=t.replace("\n"," ")
 except Exception: pass
 print(msg[:280])
 PY
