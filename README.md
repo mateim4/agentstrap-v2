@@ -179,6 +179,31 @@ your-project/
 
 ---
 
+## Troubleshooting
+
+**Slash commands don't appear, or hooks don't run.**
+Restart Claude after installing — plugins and hooks load at startup. Confirm with `claude plugin list` (you should see `agentstrap`).
+
+**Nothing happens in my project — `HANDOFF.md` never updates.**
+The hooks only act when the folder contains `.agentstrap/config.json`. Run `/agentstrap:bootstrap`, and start `claude` **from inside the project folder**, not your home directory.
+
+**My other device doesn't show the latest handoff.**
+Cross-device sync needs a git remote. Check `git remote -v`. `SessionStart` warns you when local commits are unpushed — run `git push` (or open Obsidian so obsidian-git syncs).
+
+**Too many tiny "agentstrap: session handoff" commits.**
+Pushes are throttled (default 90s). To push less often, raise `continuity.push_throttle_seconds` in `.agentstrap/config.json` — or set `continuity.push: false` to let your own sync tool do all the pushing.
+
+**`/agentstrap:audit` says there's nothing to do.**
+You're in a planning-stage project with no code yet. Audits are for code — this is expected.
+
+**Will re-running `/agentstrap:bootstrap` overwrite my work?**
+No. It's idempotent: it detects what already exists and only adds what's missing, after a dry run you confirm. Your notes are never touched.
+
+**Windows?**
+The hook layer is bash (Linux/macOS). Skills and agents still work, but automatic continuity won't.
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
