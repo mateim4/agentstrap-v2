@@ -16,6 +16,16 @@ as_resolve_paths "$CFG"
 echo "# AgentStrap — session handoff (auto-injected)"
 echo "_Continuity restored from the docs vault. Honour the project working rules; keep HANDOFF current._"
 echo
+
+# Surface a previously-deferred sync so it is never silent.
+if git -C "$AS_VAULT" rev-parse '@{u}' >/dev/null 2>&1; then
+  AHEAD="$(git -C "$AS_VAULT" rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)"
+  case "$AHEAD" in (''|*[!0-9]*) AHEAD=0;; esac
+  if [ "$AHEAD" -gt 0 ]; then
+    echo "> ⚠️ The docs vault has $AHEAD local commit(s) not yet pushed — a prior session may not have synced to other devices. Run \`git -C \"$AS_VAULT\" push\` (or open Obsidian so obsidian-git syncs)."
+    echo
+  fi
+fi
 if [ -f "$AS_HANDOFF" ]; then
   cat "$AS_HANDOFF"
 else

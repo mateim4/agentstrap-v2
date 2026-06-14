@@ -7,7 +7,16 @@ disable-model-invocation: true
 
 # AgentStrap release
 
-Follow `${CLAUDE_SKILL_DIR}/../../reference/release-checklist.md` exactly, in order. Read `.agentstrap/config.json` → `release` for `version_files`, `build_command`, `test_command`, `artifact_dir`.
+Read `.agentstrap/config.json` → `release` for `version_files`, `build_command`, `test_command`, `artifact_dir`. Then follow these steps in order:
+
+1. **Determine target version** (arg or next from changelog); confirm with the user.
+2. **Bump every file** in `release.version_files` — they MUST all end up matching.
+3. **Finalize the changelog** — move `Unreleased` into a dated `vX.Y.Z` section.
+4. **Build** (`release.build_command`) — hard gate: abort on failure.
+5. **Test** (`release.test_command`) — soft gate: report failures and ask.
+6. **Commit + tag** (`release: vX.Y.Z`, tag `vX.Y.Z`) — never auto-push.
+7. **Checksums** — SHA-256 of artifacts in `release.artifact_dir` → `SHA256SUMS.txt`.
+8. **Final checklist** — confirm all version files match, build clean, test status, changelog dated, tag created, checksums written; list artifacts with sizes.
 
 Key rules:
 - **All version files must end up matching** the target version — verify after editing.

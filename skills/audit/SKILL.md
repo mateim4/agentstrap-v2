@@ -17,13 +17,12 @@ Run a multi-perspective audit and produce one consolidated, deduplicated report.
 
 ## Step 1 — Map: dispatch the persona swarm IN PARALLEL
 
-First load the shared spec so you can hand it to each agent (the agents are self-contained and expect it in their task prompt):
+The agents are self-contained and expect the severity scale + finding format in their task prompt. Severity scale to include verbatim:
 
-```bash
-cat "${CLAUDE_SKILL_DIR}/../../reference/severity-scale.md"
-```
+> **P0 Critical** — exploitable now / data loss / build-ship blocker. **P1 High** — serious correctness/security/UX defect; fix this cycle. **P2 Medium** — real but not urgent. **P3 Low** — polish/nits.
+> Security findings also tag **STRIDE** (Spoofing/Tampering/Repudiation/Info-disclosure/DoS/Elevation) and a deployment-context badge: 🔴 APPLIES (full), 🟡 REDUCED (a compensating control lowers it, e.g. air-gapped removes the remote attacker), ⚪ N/A (not reachable). Default context `internet-facing` = all 🔴.
 
-In a single message, dispatch these subagents with the Task tool (`subagent_type` = agent name), each scoped to the target files. Skip `audit-ux-accessibility` if there is no UI. **In every task prompt include:** (a) the severity scale you just printed, (b) the deployment context, and (c) the finding format below.
+In a single message, dispatch these subagents with the Task tool (`subagent_type` = agent name), each scoped to the target files. Skip `audit-ux-accessibility` if there is no UI. **In every task prompt include:** (a) the severity scale above, (b) the deployment context, and (c) the finding format below.
 
 - `audit-code-quality`, `audit-security`, `audit-architecture`, `audit-performance`, `audit-documentation`, `audit-testing`, `audit-ux-accessibility`, `audit-adversarial`.
 

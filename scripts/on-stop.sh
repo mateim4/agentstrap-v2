@@ -81,12 +81,19 @@ else:
 open(path,"w").write(txt)
 PY
 
-# Push only if obsidian-git is NOT the active committer (single-writer rule).
+# Push only if obsidian-git is NOT the active committer (single-writer rule), and
+# at most once per throttle window to avoid a commit per turn. Files are written
+# every turn regardless; SessionEnd guarantees a final push.
 if [ "$AS_PUSH" != "false" ]; then
   if as_obsidian_running && [ "$AS_OBS" != "false" ]; then
     as_log "stop: obsidian running — leaving push to obsidian-git"
   else
-    as_safe_push "$AS_VAULT" "$AS_HANDOFF_REL" "$AS_DELTA_REL"
+    THROTTLE="$(as_cfg "$CFG" continuity.push_throttle_seconds 90)"
+    if as_should_push "$AS_PROJ/.agentstrap" "$THROTTLE"; then
+      as_safe_push "$AS_VAULT" "$AS_HANDOFF_REL" "$AS_DELTA_REL"
+    else
+      as_log "stop: push throttled (file written; will push within ${THROTTLE}s or at session end)"
+    fi
   fi
 fi
 exit 0

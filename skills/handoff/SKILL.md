@@ -16,4 +16,4 @@ The hooks keep the auto-state block current every turn; this skill refreshes the
    - **Files to review first** — the 2–5 files/notes to open on resume.
    - **Open questions in flight** — pointers into the Open Questions register.
 3. Be concrete and concise — write it for "future Claude on another machine with no memory of this chat."
-4. Save. The `Stop` hook will refresh the auto-state and sync it; if you want it pushed immediately, you may run `bash "${CLAUDE_SKILL_DIR}/../../scripts/on-stop.sh" </dev/null` (it will commit/push per the single-writer rule).
+4. Save. The `Stop` hook refreshes the auto-state and syncs it at the end of this turn (subject to the push throttle), and the `SessionEnd` hook guarantees a final push. No manual command is required.

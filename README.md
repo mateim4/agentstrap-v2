@@ -49,13 +49,19 @@ Then, from inside a project directory:
 
 ```
 .claude-plugin/   plugin.json + marketplace.json (this repo is its own marketplace)
-skills/           bootstrap, audit, security-audit, release, handoff, decision, open-question, working-rules, consolidate-findings
+skills/           bootstrap (+ its detect/sanity scripts), audit, security-audit, release,
+                  handoff, decision, open-question, working-rules, consolidate-findings
 agents/           8 audit personas + research-delegate
 hooks/            hooks.json (SessionStart, Stop, SessionEnd)
-scripts/          continuity + detection + sanity-check (portable bash)
+scripts/          continuity-lib + the three hook scripts (bash)
 templates/        scaffolding emitted by /bootstrap (vault 00–90, adapters, schemas)
 reference/        severity-scale, audit-personas, release-checklist
 ```
+
+## Requirements
+
+`bash`, `python3`, and `git` on PATH. The continuity hooks are bash scripts, so they
+target **Linux/macOS**; Windows is not yet supported for the hook layer.
 
 ## License
 

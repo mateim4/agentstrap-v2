@@ -63,20 +63,35 @@ as_obsidian_running() {
 
 as_is_git_repo() { git -C "$1" rev-parse --git-dir >/dev/null 2>&1; }
 
-# Surgically commit+push specific files in a repo, coexisting with an external
-# auto-committer. Serialized per-device by flock; rebase+force-with-lease+retry
-# handles the rare two-device race. Usage: as_safe_push <repo> <relfile> [relfile...]
+# Throttle: return 0 at most once per <interval> seconds (timestamp under a state dir).
+# Usage: as_should_push <state_dir> <interval_seconds>
+as_should_push() {
+  local stamp="$1/.last_push" interval="${2:-90}" now last
+  now="$(date +%s 2>/dev/null || echo 0)"
+  last="$(cat "$stamp" 2>/dev/null || echo 0)"
+  case "$last" in (*[!0-9]*|"") last=0;; esac
+  if [ $(( now - last )) -ge "$interval" ]; then printf '%s' "$now" >"$stamp" 2>/dev/null || true; return 0; fi
+  return 1
+}
+
+# Surgically commit+push specific files, coexisting with an external auto-committer.
+# Files are given RELATIVE TO <vault>; we resolve the actual git top-level and use
+# ABSOLUTE paths, so it works even when the vault is a subdirectory of the repo.
+# Serialized per-device by flock; on a true two-device conflict it DEFERS (never
+# force-overwrites). Usage: as_safe_push <vault> <relfile> [relfile...]
 as_safe_push() {
-  local repo="$1"; shift
-  as_is_git_repo "$repo" || { as_log "safe_push: $repo is not a git repo, skipping"; return 0; }
+  local vault="$1"; shift
+  as_is_git_repo "$vault" || { as_log "safe_push: $vault is not a git repo, skipping"; return 0; }
+  local repo; repo="$(git -C "$vault" rev-parse --show-toplevel 2>/dev/null)" || { as_log "safe_push: no toplevel for $vault"; return 0; }
+  local absfiles=() f
+  for f in "$@"; do absfiles+=("$vault/$f"); done
   (
     if as_have flock; then exec 9>"$repo/.git/agentstrap-push.lock"; flock -w 30 9 || { as_log "safe_push: lock timeout"; exit 0; }; fi
-    local f
-    for f in "$@"; do [ -e "$repo/$f" ] && git -C "$repo" add -- "$f" 2>/dev/null; done
+    for f in "${absfiles[@]}"; do [ -e "$f" ] && git -C "$repo" add -- "$f" 2>/dev/null; done
     if git -C "$repo" diff --cached --quiet 2>/dev/null; then
       as_log "safe_push: nothing staged in $repo"
     else
-      git -C "$repo" commit -q -m "agentstrap: session handoff $(date '+%F %T')" -- "$@" >/dev/null 2>&1 || true
+      git -C "$repo" commit -q -m "agentstrap: session handoff $(date '+%F %T')" -- "${absfiles[@]}" >/dev/null 2>&1 || true
     fi
     if git -C "$repo" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
       # Reconcile with the remote and push WITHOUT EVER force-overwriting another

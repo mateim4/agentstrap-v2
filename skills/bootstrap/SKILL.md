@@ -9,15 +9,17 @@ disable-model-invocation: true
 
 You are setting up — or sanity-checking — an AgentStrap workspace in the current project. **Never overwrite or delete existing content.** Your job is to detect what already exists, report gaps, and add only what is missing, conforming to the project's existing naming.
 
-## Step 1 — Run the sanity check
+## Step 1 — Sanity check (auto-runs at skill load)
 
-Run:
+Sanity check output:
 
-```bash
-python3 "${CLAUDE_SKILL_DIR}/../../scripts/sanity-check.py" "${CLAUDE_PROJECT_DIR:-$PWD}"
-```
+!`python3 "${CLAUDE_SKILL_DIR}/sanity-check.py" "${CLAUDE_PROJECT_DIR:-$PWD}"`
 
-The output has a human report, then a line `---JSON---`, then a JSON verdict with `mode`, `missing`, `present`, `numbered_domains`, `obsidian`, `stage_guess`, `is_git`, `has_remote`. Parse the JSON.
+Plugin root (use this absolute path to read templates in later steps):
+
+!`cd "${CLAUDE_SKILL_DIR}/../.." && pwd`
+
+The sanity output has a human report, then a line `---JSON---`, then a JSON verdict with `mode`, `missing`, `present`, `numbered_domains`, `obsidian`, `stage_guess`, `is_git`, `has_remote`. Parse the JSON. If the injection above did not produce output, run it yourself: `python3 "${CLAUDE_SKILL_DIR}/sanity-check.py" "${CLAUDE_PROJECT_DIR:-$PWD}"`.
 
 Show the user the report. Then branch on `mode`:
 
@@ -37,7 +39,7 @@ Adaptive interview first (use AskUserQuestion; **skip anything already detected*
 4. Deployment context: `air-gapped` / `internal` / `internet-facing` (for audits).
 5. If `code` stage: confirm `version_files`, `build_command`, `test_command` (pre-fill from detected `build_files`).
 
-Then create (copying and filling templates from `${CLAUDE_SKILL_DIR}/../../templates/`):
+Then create (copying and filling templates from the `templates/` directory under the plugin root printed in Step 1):
 
 - The `00–90` vault under `templates/vault/` (use the folder names as-is).
 - `agents.md` from `templates/agents.md.tmpl`, replacing `{{PROJECT_NAME}}`, `{{STAGE}}`, `{{VAULT_PATH}}`, `{{HANDOFF_FILE}}`, `{{DELTA_FILE}}`.
