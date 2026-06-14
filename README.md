@@ -1,67 +1,183 @@
 # AgentStrap v2
 
-A reusable **Claude Code plugin** that bootstraps a disciplined, AI-driven project workspace and keeps it continuous across machines.
+**A Claude Code plugin that gives every project a disciplined workspace and never loses your place when you switch computers.**
 
-It unifies two earlier approaches — a planning-first methodology (PM-first working rules, a Decisions Log ⇄ Open Questions flow, numbered `00–90` documentation domains) and an operational toolkit (an audit swarm + a release pipeline) — and re-expresses them in the modern Claude Code primitives: **skills, subagents, and hooks**, shipped as one installable plugin.
+You work on a desktop. You travel with a laptop. Today, moving between them means re-explaining to Claude where you left off. AgentStrap fixes that — and adds a repeatable, PM-style workflow on top.
 
-## Why it exists
+```
+   Desktop                    GitHub                     Laptop
+  ┌─────────┐   auto-push   ┌────────┐   auto-pull   ┌─────────┐
+  │ Claude  │ ────────────▶ │  repo  │ ────────────▶ │ Claude  │
+  └────┬────┘               └────────┘               └────┬────┘
+       │ every turn writes                                │ on start, injects
+       ▼ HANDOFF.md                                       ▼ HANDOFF.md back
+   "where we left off"  ───────────────────────────▶  resume cold, no re-explaining
+```
 
-The original pain: switching between a desktop and a laptop loses the Claude Code conversation, so "where did we leave off?" becomes guesswork. AgentStrap v2 solves that by making the **handoff a file in your synced docs vault, written automatically after every turn** — never a command you have to remember.
+---
 
-## What you get
+## TL;DR
 
-| Capability | How |
+```bash
+# 1. install (once per machine)
+/plugin marketplace add https://github.com/mateim4/agentstrap-v2
+/plugin install agentstrap@agentstrap-v2
+
+# 2. set up a project (once per project) — run Claude from inside the project folder
+/agentstrap:bootstrap
+
+# 3. just work. Continuity is automatic from here on.
+```
+
+That's the whole loop. Everything below is detail you can read when you need it.
+
+---
+
+## The problem it solves
+
+| Pain | AgentStrap's answer |
 | --- | --- |
-| **Automatic cross-device handoff** | `Stop` hook rewrites `HANDOFF.md` + `DELTA_TRACKING.md` every turn; pushed by your existing sync (or by the `SessionEnd` hook). `SessionStart` injects it back on the next machine. |
-| **Idempotent project bootstrap** | `/agentstrap:bootstrap` detects greenfield / existing-docs / already-stamped and **never overwrites** your content — it runs a sanity check and only adds what's missing. |
-| **Audit swarm** | `/agentstrap:audit` fans out 8 specialist reviewers, then consolidates to a deduped P0–P3 report. |
-| **Release pipeline** | `/agentstrap:release` does version-bump-all → changelog → build → test gate → tag → checksums (never auto-pushes). |
-| **Decision discipline** | `/agentstrap:decision` and `/agentstrap:open-question` maintain an append-only Decisions Log and an Open-Questions register. |
+| Switch device → lost the chat, "where were we?" | Handoff written to a synced file **every turn**, injected back on the other machine |
+| You forget to save context before closing | It's a **hook**, not a command — nothing to remember |
+| Claude crashes mid-session | Last turn already saved; worst case you lose one message |
+| Every project reinvents its own docs/process | One `/bootstrap` scaffolds a consistent structure |
+| Want a real review / release process | Built-in audit swarm + release pipeline |
 
-## Install
+---
 
-```shell
+## How it works (mental model)
+
+AgentStrap is **two halves**:
+
+```
+   GLOBAL  (installed once — present in every session)
+  ┌────────────────────────────────────────────┐
+  │  9 skills   →  /agentstrap:* slash commands │
+  │  9 agents   →  the audit swarm              │
+  │  3 hooks    →  Start · Stop · End           │   ← the reusable engine
+  └───────────────────────┬────────────────────┘
+                          │ /agentstrap:bootstrap writes ↓
+   PROJECT  (lives inside each repo you set up)
+  ┌────────────────────────────────────────────┐
+  │  .agentstrap/config.json   (settings)       │
+  │  agents.md + CLAUDE.md     (the rules)      │
+  │  HANDOFF.md + DELTA_TRACKING.md (continuity)│   ← the per-project state
+  │  00–90 docs vault          (your knowledge) │
+  └────────────────────────────────────────────┘
+```
+
+- The **engine is global** — install it once and the commands/agents/hooks exist in every Claude session on that machine.
+- The **state is per-project** — the hooks stay dormant until a folder has `.agentstrap/config.json` (created by `/bootstrap`), so they never touch unrelated projects.
+
+<details>
+<summary><b>How continuity actually moves between devices</b></summary>
+
+1. **Stop hook** (fires after every reply): rewrites `HANDOFF.md` + appends to `DELTA_TRACKING.md`. No command needed.
+2. **Pushing**: your synced vault (e.g. obsidian-git) or the hook itself pushes to GitHub. The hook **never force-overwrites** the other device — on a true conflict it keeps your copy and defers, so nothing is ever lost.
+3. **SessionStart hook** (other machine): reads the handoff and feeds it to Claude as context, so it resumes as if it never left.
+4. **SessionEnd hook**: guarantees a final push when you close the session.
+
+Single rule throughout: **one writer per repo** — no clobbering, ever.
+</details>
+
+---
+
+## Install & requirements
+
+```bash
 /plugin marketplace add https://github.com/mateim4/agentstrap-v2
 /plugin install agentstrap@agentstrap-v2
 ```
 
-For local development:
+| | |
+| --- | --- |
+| **Needs** | `bash`, `python3`, `git` on PATH |
+| **Platforms** | Linux & macOS (the hooks are bash) — **Windows not supported** for the hook layer |
+| **Scope** | Plugin is **global** (per machine); its effects are **project-gated** |
 
-```shell
-claude --plugin-dir /path/to/agentstrap-v2
-```
+> After installing, **restart Claude** so the hooks load.
 
-Then, from inside a project directory:
+---
 
-```shell
-/agentstrap:bootstrap
-```
+## Daily workflow — what to run, and when
 
-## Design principles
-
-- **Hooks over prose** — continuity is enforced by the harness, not by remembering to run a command.
-- **Single-writer-per-repo** — the handoff hook never fights an external auto-committer (e.g. `obsidian-git`); it writes the file and lets the existing committer sync it, or pushes safely with `--force-with-lease` when no committer is running.
-- **Idempotent & non-destructive** — re-running bootstrap is a desired-state-vs-actual diff (a dry run by default), not a clobber.
-- **Config-driven** — per-project settings live in `.agentstrap/config.json`, read at runtime.
-- **Obsidian-optional** — detected and conformed to, never imposed.
-
-## Layout
+You mostly do nothing — continuity is automatic. You only reach for a command at the moments below.
 
 ```
-.claude-plugin/   plugin.json + marketplace.json (this repo is its own marketplace)
-skills/           bootstrap (+ its detect/sanity scripts), audit, security-audit, release,
-                  handoff, decision, open-question, working-rules, consolidate-findings
-agents/           8 audit personas + research-delegate
-hooks/            hooks.json (SessionStart, Stop, SessionEnd)
-scripts/          continuity-lib + the three hook scripts (bash)
-templates/        scaffolding emitted by /bootstrap (vault 00–90, adapters, schemas)
-reference/        severity-scale, audit-personas, release-checklist
+   once per project          every day              when you have code        cutting a release
+ ┌──────────────────┐      ┌─────────────┐         ┌──────────────────┐      ┌────────────────┐
+ │ /agentstrap:     │ ───▶ │  just work  │  ─────▶  │ /agentstrap:audit│ ───▶ │ /agentstrap:   │
+ │   bootstrap      │      │ (auto save) │         │  (review pass)   │      │   release      │
+ └──────────────────┘      └──────┬──────┘         └──────────────────┘      └────────────────┘
+                                  │ as decisions happen:
+                                  ▼ /agentstrap:decision · /agentstrap:open-question
 ```
 
-## Requirements
+### Command cheat-sheet
 
-`bash`, `python3`, and `git` on PATH. The continuity hooks are bash scripts, so they
-target **Linux/macOS**; Windows is not yet supported for the hook layer.
+| Command | Run it **when…** | It does |
+| --- | --- | --- |
+| `/agentstrap:bootstrap` | starting a project, or re-checking one | Scaffolds (or **gap-fills**) the workspace — non-destructive |
+| `/agentstrap:decision` | you just made a call | Logs it to the Decisions Log |
+| `/agentstrap:open-question` | a question is open, or got answered | Tracks it (answered ones move to the Decisions Log) |
+| `/agentstrap:handoff` | before switching devices / wrapping up | Writes a rich "where we are" narrative now |
+| `/agentstrap:audit` | you have code to review | Fans out an 8-reviewer swarm → one P0–P3 report |
+| `/agentstrap:security-audit` | you want a security pass | Security + red-team review with STRIDE severity |
+| `/agentstrap:release` | cutting a version | Bump → changelog → build/test → tag → checksums |
+
+**Automatic — you never type these:** `SessionStart` (restores context), `Stop` (saves every turn), `SessionEnd` (final sync).
+
+> 💡 One habit worth keeping: **run `claude` from inside the project folder**, not your home directory. That scopes the session and lets the hooks find the right files.
+
+---
+
+## The `/bootstrap` phases
+
+`/bootstrap` is **idempotent** — safe to run on a fresh folder *or* an existing one. It picks a mode automatically:
+
+```
+        what's in the folder?
+                │
+   ┌────────────┼─────────────────────────┐
+   ▼            ▼                          ▼
+ nothing     existing docs,           already has
+            no AgentStrap mark        AgentStrap mark
+   │            │                          │
+ GREENFIELD   ADOPT                      STAMPED
+ full          add ONLY what's          verify / upgrade,
+ scaffold      missing, keep your        repair drift
+               files & naming
+```
+
+It always **shows a dry run first** and asks before writing. It never deletes or overwrites your existing notes.
+
+---
+
+## What lands in your project
+
+```
+your-project/
+├── .agentstrap/        config.json · manifest.json   (settings + install stamp)
+├── agents.md           the single source of project rules
+├── CLAUDE.md           thin adapter → reads agents.md
+├── HANDOFF.md          ← auto-updated every turn (your "where we left off")
+├── DELTA_TRACKING.md   ← auto-updated change log
+└── 00–90 …             numbered docs vault (Foundations, Product, Design,
+                          Engineering, Operations, Business, Reference)
+```
+
+---
+
+## Features at a glance
+
+- 🔄 **Automatic cross-device continuity** (hooks, not commands)
+- 🧱 **Idempotent bootstrap** with a non-destructive sanity check
+- 📋 **PM-first working rules** + Decisions Log ⇄ Open Questions discipline
+- 🔍 **8-persona audit swarm** → consolidated P0–P3 report
+- 🚀 **Release pipeline** (never auto-pushes)
+- 🧩 Ships as **one installable plugin**
+
+---
 
 ## License
 
