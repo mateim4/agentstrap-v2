@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-06-14
+
+### Fixed
+- `as_safe_push` resolves the git top-level and uses absolute paths, so the vault may be a subdirectory of the repo.
+- Stop-hook push throttle (default 90s) avoids a commit-per-turn when Obsidian is closed; `SessionEnd` still guarantees a final push.
+- `SessionStart` surfaces unpushed local commits, so a deferred two-device sync is never silent.
+- `SessionStart` hook fires on all sources (removed a matcher assumption that could have silenced it).
+- Bootstrap detect/sanity scripts moved into the skill dir and invoked via `!`-injection; severity scale + release checklist inlined into skills (no plugin-file reads needed at runtime).
+
 ## [0.1.0] — 2026-06-14
 
 ### Added
