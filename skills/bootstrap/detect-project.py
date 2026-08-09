@@ -57,6 +57,8 @@ WANT = {
     "open_questions": re.compile(r"^open[ _-]?questions?\.md$", re.I),
     "working_rules": re.compile(r"^working[ _-]?rules?\.md$", re.I),
     "agents_md": re.compile(r"^agents\.md$", re.I),
+    "work_log": re.compile(r"^work[ _-]?log\.md$", re.I),
+    "credentials": re.compile(r"^credentials([ _-]and[ _-]secrets)?\.md$", re.I),
 }
 found = {k: "" for k in WANT}
 SKIP = {".git", "node_modules", "target", "dist", "build", ".obsidian", "__pycache__"}
@@ -81,6 +83,8 @@ markers = {
     "decisions_log": found["decisions_log"],
     "open_questions": found["open_questions"],
     "working_rules": found["working_rules"],
+    "work_log": found["work_log"],
+    "credentials": found["credentials"],
 }
 
 has_methodology = bool(numbered or obsidian or markers["decisions_log"] or markers["working_rules"]

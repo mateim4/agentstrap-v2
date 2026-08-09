@@ -15,7 +15,19 @@
 7. **Honest blockers.** State explicitly when waiting on a decision, credential, or asset.
 8. **Continuity is automatic.** Hooks keep `{{HANDOFF_FILE}}` + `{{DELTA_FILE}}` current every turn; never rely on remembering a command. Before wrapping up, refresh the narrative sections of the handoff (or run `/agentstrap:handoff`).
 9. **Delegate research to sub-agents.** Web searches, competitor/regulatory scans, and codebase exploration beyond ~3 queries go to a sub-agent (or a parallel swarm); the main thread receives only summarized findings.
-10. **Communicate concisely.** Lead with the answer; bullets over prose. No preambles or trailing summaries. Expand on request.
+9a. **Three tiers, each on the right model.** Main thread (strongest model) makes the calls and never spends itself on volume. The muscle (cheapest capable model) does the easy, repetitive, low-judgement work — one narrow job per agent. A separate reconciliation layer (strong model) verifies the muscle's output: does the source say this, do the units line up, is "UNKNOWN" being papered over. Never gather and verify in the same agent.
+10. **Bottom Line Up Front (BLUF).** Lead every substantive reply with the conclusion and the decision needed, then the detail. If the honest answer is "unknown", "it depends" or "blocked", that *is* the bottom line — say it first, don't manufacture a verdict. Bad news first, never last. Plain language: say what a thing *does*, not what it's called; spell out jargon on first use or drop it. Then keep it short — no preambles, no recaps of visible work, no trailing summaries. Uncertainty survives compression.
+    - Also shipped as an **output style**: `/config` → Output style → **BLUF** puts this in the system prompt every turn. The written rule still covers what output styles don't reach — sub-agents, commit messages, vault prose.
+
+## Documentation continuity
+
+> Documentation rots asymmetrically: append-style records (Decisions Log, handoff) stay current; amend-style records (spec statuses, README, index notes) rot because nothing forces a re-visit.
+
+1. **Document in the same turn as the work** — the session that ships something updates the affected docs then and there, not only the handoff.
+2. **Shipping means amending, not just appending** — flip the spec's status line and fix contradicted body text; a Decisions Log entry alone is not documentation.
+3. **The handoff keeps a ~2-week window** — older session narratives move to the permanent **Work Log** (vault root, append-only, newest first); durable operational facts live in their own note.
+4. **The Decisions Log is jumped, not read** — it has a table of contents at the top; use it. Appending an entry also adds its ToC row.
+5. **Secrets live only in the Credentials and secrets note** — link, never copy.
 
 ## Tracker boundary
 

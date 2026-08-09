@@ -5,6 +5,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-08-09
+
+Theme: **stop the two ways a project's paper trail goes bad** — documentation that rots because nobody re-visits it, and answers that get buried in paragraph four.
+
+### Added
+- **BLUF output style** (`output-styles/bluf.md`) — bottom line up front, plain language, honest uncertainty, bad news first. Ships as a Claude Code output style so the rules live in the system prompt and hold every turn instead of being read once and forgotten. Sets `keep-coding-instructions: true`, so built-in engineering behaviour is untouched. Enable it with `/config` → **Output style** → **BLUF**.
+- **Documentation-continuity rules** (working rules + `agents.md` template): document in the same turn as the work; shipping means amending the contradicted text, not only appending a decision; the handoff keeps a ~2-week window and spills older narrative to the Work Log; the Decisions Log is jumped via its table of contents, not read; secrets live in exactly one note.
+- **Rule 9a — three model tiers.** The main thread decides, the cheapest capable model does the volume work, and a separate strong-model layer reconciles what it returned. Never gather and verify in the same agent.
+- **`Work Log.md` template** — permanent, append-only session history at the vault root, where handoff narratives go once they age out.
+- **`Credentials and secrets.md` template** — the single place credentials live, with a warning that a git-tracked vault gets pointers, not production secrets.
+- **Decisions Log table of contents** — the template now opens with a jump table and a "don't read this end to end" note; the entry template includes the ToC row.
+
+### Changed
+- **Rule 10 is now BLUF**, superseding "communicate concisely".
+- `decision` skill: never read the whole log, add the ToC row in the same edit, record an overridden recommendation explicitly, and amend whatever the decision contradicts.
+- `handoff` skill: enforce the ~2-week window, move durable operational facts out to their own note, keep credentials out entirely, and correct what the session made false.
+- `bootstrap`: detects and gap-fills the Work Log and Credentials notes, and offers the BLUF output style on finish.
+- README: five pillars instead of four; continuity pillar now covers the anti-rot rules.
+
 ## [0.1.2] — 2026-06-14
 
 ### Fixed

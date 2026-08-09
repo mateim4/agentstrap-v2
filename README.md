@@ -12,14 +12,15 @@ It replaces "vibe-coding with amnesia" with a repeatable process: every decision
 
 ---
 
-## The four pillars
+## The five pillars
 
 | Pillar | What it gives you |
 | --- | --- |
 | 🗂️ **Structured workspace** | A domain-segmented docs vault (Foundations → Product → Design → Engineering → Operations → Business → Reference) — an EA-style backbone instead of scattered notes |
 | ⚖️ **Decision governance** | An append-only Decisions Log ⇄ Open-Questions register + PM-first working rules, so choices are deliberate and traceable |
 | 🔍 **Review swarm** | One command fans out 8 specialist reviewers (architecture, security, performance, …) → a single, deduped, prioritized report |
-| 🔄 **Living continuity** | Hooks keep your "where we left off" current every turn and restore it on any device — the discipline survives closing the laptop |
+| 🔄 **Living continuity** | Hooks keep your "where we left off" current every turn and restore it on any device — plus documentation-continuity rules that stop specs, READMEs and status lines rotting behind the code |
+| 🎯 **BLUF communication** | A shipped output style that puts the conclusion first, in plain language, with uncertainty stated — enforced from the system prompt, not a rule that gets forgotten mid-task |
 
 > Continuity isn't the headline feature — it's what makes the *other three* survive across sessions. A governed process is worthless if its state evaporates when you close the tab.
 
@@ -50,6 +51,8 @@ It replaces "vibe-coding with amnesia" with a repeatable process: every decision
 | Reviews are one-dimensional ("looks fine to me") | 8-perspective audit swarm → consolidated P0–P3 report |
 | Every project reinvents its own process | One reusable, opinionated methodology, installed once |
 | Switch device → lost the thread, "where were we?" | Auto-handoff written every turn, restored on the other machine |
+| Docs drift: specs still say "planned" months after shipping | Continuity rules that force the re-visit — ship it, amend it, in the same turn |
+| The answer is buried in paragraph four | BLUF output style: conclusion and required decision first, every turn |
 
 ---
 
