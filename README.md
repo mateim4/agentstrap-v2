@@ -20,7 +20,7 @@ It replaces "vibe-coding with amnesia" with a repeatable process: every decision
 | ⚖️ **Decision governance** | An append-only Decisions Log ⇄ Open-Questions register + PM-first working rules, so choices are deliberate and traceable |
 | 🔍 **Review swarm** | One command fans out 8 specialist reviewers (architecture, security, performance, …) → a single, deduped, prioritized report |
 | 🔄 **Living continuity** | Hooks keep your "where we left off" current every turn and restore it on any device — plus documentation-continuity rules that stop specs, READMEs and status lines rotting behind the code |
-| 🎯 **BLUF communication** | A shipped output style that puts the conclusion first, in plain language, with uncertainty stated — enforced from the system prompt, not a rule that gets forgotten mid-task |
+| 🎯 **BLUF communication** | A shipped output style that puts the conclusion first, in plain language, with uncertainty stated — enforced from the system prompt, not a rule that gets forgotten mid-task. Pinned to the project, so it holds for everyone on every machine |
 
 > Continuity isn't the headline feature — it's what makes the *other three* survive across sessions. A governed process is worthless if its state evaporates when you close the tab.
 
@@ -110,6 +110,7 @@ AgentStrap is **two halves**:
   │  00–90 docs vault          (the structure) │
   │  agents.md + CLAUDE.md     (the rules)      │
   │  .agentstrap/config.json   (settings)       │
+  │  .claude/settings.json     (output style)   │
   │  HANDOFF.md + DELTA_TRACKING.md (continuity)│   ← the per-project state
   └────────────────────────────────────────────┘
 ```

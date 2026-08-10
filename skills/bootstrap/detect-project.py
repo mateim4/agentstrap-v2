@@ -73,6 +73,16 @@ for dirpath, dirnames, filenames in os.walk(root):
             if not found[key] and pat.match(fn):
                 found[key] = os.path.relpath(os.path.join(dirpath, fn), root)
 
+
+def output_style():
+    """The project's pinned Claude Code output style, if any ('' when unset)."""
+    try:
+        with open(os.path.join(root, ".claude", "settings.json")) as fh:
+            return json.load(fh).get("outputStyle") or ""
+    except Exception:
+        return ""
+
+
 markers = {
     "manifest": exists(".agentstrap", "manifest.json"),
     "config": exists(".agentstrap", "config.json"),
@@ -85,6 +95,7 @@ markers = {
     "working_rules": found["working_rules"],
     "work_log": found["work_log"],
     "credentials": found["credentials"],
+    "output_style": output_style(),
 }
 
 has_methodology = bool(numbered or obsidian or markers["decisions_log"] or markers["working_rules"]

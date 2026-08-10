@@ -40,6 +40,7 @@ components = [
     ("work_log", "Work Log (permanent session history the handoff spills into)", bool(m.get("work_log"))),
     ("credentials", "Credentials and secrets (the one place credentials live)", bool(m.get("credentials"))),
     ("delta", "DELTA_TRACKING.md change log", bool(m.get("delta"))),
+    ("output_style", "Output style pinned in .claude/settings.json (travels with the repo)", bool(m.get("output_style"))),
     ("config", ".agentstrap/config.json (runtime config)", bool(m.get("config"))),
     ("manifest", ".agentstrap/manifest.json (install stamp)", bool(m.get("manifest"))),
 ]

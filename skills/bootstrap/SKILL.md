@@ -47,6 +47,7 @@ Then create (copying and filling templates from the `templates/` directory under
 - `HANDOFF.md` and `DELTA_TRACKING.md` from the templates (at the vault root, or `40 - Operations/` if you prefer — record the choice).
 - `Work Log.md` at the vault root from `templates/vault/Work Log.md` — the permanent session history the handoff spills into once narratives pass ~2 weeks.
 - `Credentials and secrets.md` in the foundations domain — the single place credentials live.
+- `.claude/settings.json` with `"outputStyle": "BLUF"` — pins the shipped output style to the project, so it travels with the repo instead of being configured per machine. **If the file already exists, add only that key and leave everything else alone.**
 - `.agentstrap/config.json` (validate against `templates/config.schema.json`).
 - `.agentstrap/manifest.json` (validate against `templates/manifest.schema.json`); list every path you created in `created`.
 - A `.gitattributes` line so the change log auto-unions across devices instead of conflicting:
@@ -65,6 +66,7 @@ This is the **gap-fill** path. Rules:
   - `handoff` / `delta` → place `HANDOFF.md` + `DELTA_TRACKING.md` in the vault; record their paths in config.
   - `work_log` → `Work Log.md` at the vault root. If the existing handoff already carries months of narrative, offer to move everything older than ~2 weeks into it as part of the gap-fill.
   - `credentials` → `Credentials and secrets.md` in the existing foundations domain. If credentials are currently scattered across other notes, **list where you found them** and offer to consolidate — do not move or delete anything without confirmation.
+  - `output_style` → add `"outputStyle": "BLUF"` to `.claude/settings.json`. **Merge, never overwrite** — if the file exists, add only that key. If it already pins a different style, say which one and ask before changing it; the user's existing choice wins by default.
   - `config` → `.agentstrap/config.json` with `continuity.vault_path` = the vault root (the git repo), `obsidian_enabled` per detection.
   - `manifest` → `.agentstrap/manifest.json` with `mode: "adopt"`, `created` listing only what you added, and `conformed_to.domains` = the existing domains.
   - Add the `.gitattributes` `DELTA_TRACKING.md merge=union` line if absent.
@@ -81,5 +83,5 @@ Read `.agentstrap/manifest.json`. Compare its `agentstrap_version` with the runn
 - Summarize what was created (or, in dry-run, what would be created).
 - Remind the user: **run `claude` from this project directory** (not the home directory) so sessions are project-scoped and the continuity hooks resolve `${CLAUDE_PROJECT_DIR}` correctly.
 - Confirm the continuity hooks will now keep `HANDOFF.md` updated every turn and that on another device the `SessionStart` hook will inject it.
-- **Offer the BLUF output style.** AgentStrap ships one (`output-styles/bluf.md`) that puts the communication rules — bottom line first, plain language, honest uncertainty — into the system prompt so they hold every turn instead of being read once and forgotten. Tell the user to enable it with `/config` → **Output style** → **BLUF** (it takes effect in the next session). It sets `keep-coding-instructions: true`, so Claude Code's built-in engineering behaviour is unchanged. Note that output styles apply to the main conversation only — sub-agents keep their own system prompt, which is why the same rules also live in `agents.md`.
+- **Confirm the BLUF output style is pinned.** AgentStrap ships one (`output-styles/bluf.md`) that puts the communication rules — bottom line first, plain language, honest uncertainty — into the system prompt so they hold every turn instead of being read once and forgotten. Because `.claude/settings.json` is checked in, it applies to everyone who works in this repo on any machine — nobody configures anything. It takes effect on the **next** session; tell the user to restart and confirm via `/config` → **Output style**. It sets `keep-coding-instructions: true`, so Claude Code's built-in engineering behaviour is unchanged. Note that output styles apply to the main conversation only — sub-agents keep their own system prompt, which is why the same rules also live in `agents.md`.
 - If `is_git` is false, offer to `git init`. If `has_remote` is false, note that cross-device sync needs a remote.

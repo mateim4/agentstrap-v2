@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-08-10
+
+### Fixed
+- **The BLUF output style is now applied to the project, not left to each person's machine.** 0.2.0 shipped the style but only *told* the user to turn it on via `/config` — a manual step, repeated per machine, that nothing tracked and nothing restored. That contradicted the whole point: everything else AgentStrap manages travels with the repo. Bootstrap now writes `"outputStyle": "BLUF"` into the project's `.claude/settings.json`, which is checked in, so it applies to every person and every machine that works in the repo with no setup. Merges into an existing settings file rather than overwriting it, and an output style the user already chose is never changed without asking.
+- Detection and the sanity check know about it, so `stamped` mode can spot and repair a project whose pinned style went missing.
+
 ## [0.2.0] — 2026-08-09
 
 Theme: **stop the two ways a project's paper trail goes bad** — documentation that rots because nobody re-visits it, and answers that get buried in paragraph four.
