@@ -55,15 +55,15 @@ Adaptive interview first (use AskUserQuestion; **skip anything already detected*
 Then create (copying and filling templates from the `templates/` directory under the plugin root printed in Step 1):
 
 - The `00–90` vault under `templates/vault/` (use the folder names as-is).
-- `agents.md` from `templates/agents.md.tmpl`, replacing `{{PROJECT_NAME}}`, `{{STAGE}}`, `{{VAULT_PATH}}`, `{{HANDOFF_FILE}}`, `{{DELTA_FILE}}`.
+- `agents.md` from `templates/agents.md.tmpl`. Before replacing, you MUST sanitize `{{PROJECT_NAME}}`, `{{STAGE}}`, `{{VAULT_PATH}}`, `{{HANDOFF_FILE}}`, `{{DELTA_FILE}}` to remove any markdown control characters, newlines, or prompt injection strings.
 - Adapter files based on **Flavor Selection**:
   - If **Claude Code** or **Both**: `CLAUDE.md` and `AGENTS.md` from `templates/adapters/`. `.claude/settings.json` with `"outputStyle": "BLUF"`.
-  - If **Google Antigravity** or **Both**: `GEMINI.md` from `templates/adapters/`. Copy `output-styles/bluf.md` to `.agents/rules/bluf.md`.
+  - If **Google Antigravity** or **Both**: copy `agents.md` to `.agents/rules/agents.md` (so Antigravity auto-discovers it). Copy `output-styles/bluf.md` to `.agents/rules/bluf.md`.
 - `HANDOFF.md` and `DELTA_TRACKING.md` from the templates (at the vault root, or `40 - Operations/` if you prefer — record the choice).
 - `Work Log.md` at the vault root from `templates/vault/Work Log.md` — the permanent session history the handoff spills into once narratives pass ~2 weeks.
 - `Credentials and secrets.md` in the foundations domain — the single place credentials live.
-- `.agentstrap/config.json` (validate against `templates/config.schema.json`).
-- `.agentstrap/manifest.json` (validate against `templates/manifest.schema.json`); list every path you created in `created`.
+- `.agentstrap/config.json` (you MUST programmatically validate your proposed JSON against `templates/config.schema.json` using a Python script before saving it to disk).
+- `.agentstrap/manifest.json` (programmatically validate against `templates/manifest.schema.json` first); list every path you created in `created`.
 - A `.gitattributes` line so the change log auto-unions across devices instead of conflicting:
   `DELTA_TRACKING.md merge=union` (use the actual delta filename).
 
