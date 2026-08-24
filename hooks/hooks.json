@@ -34,20 +34,22 @@
       }
     ]
   },
-  "PreInvocation": [
-    {
-      "type": "command",
-      "command": "bash \"./scripts/session-start.sh\""
-    }
-  ],
-  "Stop": [
-    {
-      "type": "command",
-      "command": "bash \"./scripts/on-stop.sh\""
-    },
-    {
-      "type": "command",
-      "command": "bash \"./scripts/session-end.sh\""
-    }
-  ]
+  "agentstrap-antigravity": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "bash \"../scripts/session-start.sh\""
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "bash \"../scripts/on-stop.sh\""
+      },
+      {
+        "type": "command",
+        "command": "bash \"../scripts/session-end.sh\""
+      }
+    ]
+  }
 }

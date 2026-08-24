@@ -127,10 +127,15 @@ def build_plan(facts):
 
     # For each detected component, decide if it needs moving.
     for comp_key, canonical_parent in CANONICAL_PARENTS.items():
-        loc = locations.get(comp_key)
-        if not loc:
+        loc_list = locations.get(comp_key)
+        if not loc_list:
             continue  # not detected — nothing to move
-
+            
+        if len(loc_list) > 1:
+            print(f"ERROR: Ambiguity exists for {comp_key}. Resolve before normalizing.", file=sys.stderr)
+            sys.exit(1)
+            
+        loc = loc_list[0]
         src_path = loc["path"]          # relative to root
         src_type = loc["type"]          # "file" or "directory"
         src_basename = os.path.basename(src_path)

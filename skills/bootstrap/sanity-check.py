@@ -126,7 +126,7 @@ verdict = {"mode": mode, "missing": [c[0] for c in missing], "present": [c[0] fo
            "numbered_domains": facts.get("numbered_domains", []), "obsidian": facts.get("obsidian", False),
            "stage_guess": facts.get("stage_guess"), "is_git": facts.get("is_git"), "has_remote": facts.get("has_remote"),
            "ambiguities": ambiguities,
-           "existing_locations": singles}
+           "existing_locations": locations}
 
 print(report)
 print("---JSON---")

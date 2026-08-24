@@ -4,22 +4,37 @@
   "description": "Written by /agentstrap:bootstrap. Its presence flips a re-run into 'stamped' (sanity-check/upgrade) mode. Records exactly what bootstrap created so re-runs are a desired-vs-actual diff, never a clobber.",
   "type": "object",
   "required": ["agentstrap_version", "applied_at", "mode"],
+  "additionalProperties": false,
   "properties": {
-    "agentstrap_version": { "type": "string" },
-    "applied_at": { "type": "string", "description": "ISO-ish timestamp the bootstrap ran." },
+    "agentstrap_version": { "type": "string", "minLength": 1 },
+    "applied_at": { "type": "string", "format": "date-time" },
     "mode": { "type": "string", "enum": ["greenfield", "adopt"] },
     "created": {
       "type": "array",
-      "items": { "type": "string" },
+      "uniqueItems": true,
+      "maxItems": 1000,
+      "items": { "type": "string", "pattern": "^(?!\\/)(?!.*\\.\\.\\/).*$", "minLength": 1 },
       "description": "Project-relative paths AgentStrap created (so upgrades touch only its own files)."
+    },
+    "linked": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 1000,
+      "items": { "type": "string", "pattern": "^(?!\\/)(?!.*\\.\\.\\/).*$", "minLength": 1 },
+      "description": "Project-relative paths AgentStrap linked to in adopt mode instead of creating."
     },
     "conformed_to": {
       "type": "object",
+      "additionalProperties": false,
       "description": "Existing conventions AgentStrap adapted to in adopt mode (rather than imposing template defaults).",
       "properties": {
-        "domains": { "type": "array", "items": { "type": "string" } },
-        "handoff_file": { "type": "string" },
-        "delta_file": { "type": "string" }
+        "domains": { 
+          "type": "array", 
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 } 
+        },
+        "handoff_file": { "type": "string", "pattern": "^(?!\\/)(?!.*\\.\\.\\/).*$", "minLength": 1 },
+        "delta_file": { "type": "string", "pattern": "^(?!\\/)(?!.*\\.\\.\\/).*$", "minLength": 1 }
       }
     }
   }
