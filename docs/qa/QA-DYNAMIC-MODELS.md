@@ -1,0 +1,151 @@
+# Adversarial QA Pass: Dynamic Detection Verdict & Migration Models
+
+**Date:** February 2025
+**Target Subsystem:** AgentStrap Bootstrap Dynamic Detection (`skills/bootstrap/detect-project.py`, `sanity-check.py`, `normalize.py`)
+**Author:** QA Engineering (Adversarial Pass)
+
+---
+
+## Executive Summary
+
+An adversarial QA analysis was performed on AgentStrap's dynamic project detection, classification, and normalization pipeline. The pass revealed **critical structural schema mismatches**, **verdict state contradictions**, and **output formatting vulnerabilities**.
+
+Most notably, a **type contract mismatch** between `detect-project.py` and `normalize.py` breaks execution at runtime with a `TypeError` whenever `normalize.py` is executed on detected projects. Additionally, ambiguous detection states cause contradictions in `sanity-check.py` JSON verdicts, where components are reported as present in the high-level summary but absent from location mappings.
+
+---
+
+## 1. Structural Mapping & Contract Mismatches
+
+### 1.1 `existing_locations` Schema Mismatch (Critical Bug)
+
+* **Severity:** High (Runtime Fatal Error)
+* **Affected Files:** `skills/bootstrap/detect-project.py` vs `skills/bootstrap/normalize.py`
+* **Mechanism:**
+  `detect-project.py` defines `existing_locations` as a dictionary mapping component keys to **lists** of location objects:
+  ```json
+  "existing_locations": {
+    "handoff": [
+      {
+        "path": "handoff.md",
+        "type": "file",
+        "count": 1
+      }
+    ]
+  }
+  ```
+  However, `normalize.py` expects `existing_locations` to map component keys directly to a **single dictionary**:
+  ```python
+  # normalize.py (lines 133-134)
+  loc = locations.get(comp_key)
+  src_path = loc["path"]  # Raises TypeError: list indices must be integers or slices, not str
+  ```
+* **Impact:** Any invocation of `normalize.py` (both dry-run plan generation and execution) crashes with a fatal `TypeError` as soon as any existing governance file is present.
+
+### 1.2 Unhandled Type Assumption in `sanity-check.py`
+
+* **Severity:** Medium
+* **Mechanism:**
+  `sanity-check.py` constructs a `singles` dictionary by taking `v[0]` for any component with `len(v) == 1`:
+  ```python
+  singles = {k: v[0] for k, v in locations.items() if len(v) == 1}
+  ```
+  This dict is output in the verdict JSON as `existing_locations`. If `normalize.py` receives a verdict from `sanity-check.py` instead of raw `detect-project.py` facts, it expects `singles` format, whereas reading `detect-project.py` directly returns the list format. The lack of explicit JSON schema validation across skills exacerbates this contract ambiguity.
+
+---
+
+## 2. Verdict State Contradictions & Ambiguity Deficiencies
+
+### 2.1 Ambiguity Resolution State Contradiction
+
+* **Severity:** Medium
+* **Affected File:** `skills/bootstrap/sanity-check.py`
+* **Mechanism:**
+  When multiple candidate locations exist for a single component (e.g., both `Decisions Log.md` and `adrs/ADR-001.md` exist):
+  1. `sanity-check.py` populates `ambiguities["decisions_log"]` with all candidates.
+  2. `singles` explicitly excludes `decisions_log` because `len(v) > 1`.
+  3. `markers["decisions_log"]` remains `True`.
+  4. The component is classified into `verdict["present"]`.
+  5. The JSON verdict output sets `verdict["existing_locations"]` to `singles` (which lacks `decisions_log`).
+* **Contradiction:**
+  ```json
+  {
+    "mode": "adopt",
+    "present": ["decisions_log"],
+    "ambiguities": {
+      "decisions_log": [
+        {"path": "Decisions Log.md", "type": "file", "count": 1},
+        {"path": "adrs", "type": "directory", "count": 1}
+      ]
+    },
+    "existing_locations": {}  // <--- decisions_log is missing!
+  }
+  ```
+* **Impact:** Downstream automated tooling inspecting `verdict["present"]` and attempting to look up the location in `verdict["existing_locations"]` encounters a `KeyError` or unexpected `None`, breaking automated ambiguity resolution workflows.
+
+---
+
+## 3. Filename Injection & Formatting Vulnerabilities
+
+### 3.1 Unescaped Markdown Table Injection
+
+* **Severity:** Low-Medium
+* **Affected Files:** `skills/bootstrap/sanity-check.py`, `skills/bootstrap/normalize.py`
+* **Mechanism:**
+  Paths returned from `detect-project.py` are interpolated directly into Markdown report tables without escaping pipe (`|`) characters or backticks (`\`):
+  ```python
+  # sanity-check.py
+  lines.append(f"| {label} | ✓ present{note} |")
+  # where note contains loc['path'] containing '|' or newlines
+  ```
+* **Impact:**
+  Directories or files named with table syntax (e.g., `docs | confidential | notes/`) inject arbitrary table cells into the human-readable Markdown report, corrupting report formatting and potentially misleading auditors.
+
+### 3.2 Terminal Control Sequence / Newline Handling in Reports
+
+* **Severity:** Low
+* **Mechanism:**
+  If a project directory contains subdirectories with control sequences or newlines, stdout reports generated by `sanity-check.py` or `normalize.py` emit these raw control characters directly to the standard output.
+* **Impact:** Output spoofing or garbled CLI terminal outputs.
+
+---
+
+## 4. Path Traversal & Migration Safety
+
+### 4.1 Symlink Traversal & `os.walk` Behavior
+
+* **Analysis:**
+  `detect-project.py` uses standard `os.walk(root)`. In Python, `os.walk` defaults to `followlinks=False`. Symlinked directories are skipped during structural scanning, preventing infinite directory recursion and out-of-tree directory traversal.
+* **Caveat:**
+  Symlinked individual files within scanned directories *are* inspected and included in `existing_locations`. If `normalize.py` executes a `git mv` or `shutil.move` on a symlinked file, it moves the symlink itself rather than the target file.
+
+### 4.2 Migration Conflicts & Overwrite Prevention
+
+* **Analysis:**
+  `normalize.py` contains destination conflict checking (`if os.path.exists(dst_full)`), correctly marking moves as `conflicts` and skipping them during migration.
+
+---
+
+## 5. Negative Test Fixtures
+
+A negative test suite has been established under `tests/test_dynamic_models_qa.py`.
+
+| Test Case | Target Focus | Objective / Finding |
+| --- | --- | --- |
+| `test_contract_mismatch_detect_to_normalize` | Schema Mismatch | Reproduces runtime `TypeError` when `normalize.py` reads `detect-project.py` output. |
+| `test_sanity_check_ambiguity_verdict_contradiction` | Verdict State | Verifies state contradiction where ambiguous components appear in `present` but disappear from `existing_locations`. |
+| `test_markdown_and_pipe_injection_in_reports` | Markdown Injection | Verifies unescaped pipe (`\|`) characters in paths distort Markdown report tables. |
+| `test_path_traversal_and_directory_symlink_traversal` | Symlink Traversal | Confirms symlinked file detection behavior and safe traversal boundaries. |
+| `test_control_character_and_newline_injection` | Formatting Injection | Validates handling of backticks and control characters in detected directory paths. |
+
+---
+
+## 6. Recommendations & Action Items
+
+1. **Standardize `existing_locations` Schema Contract:**
+   - Modify `normalize.py` to expect `existing_locations` as `dict[str, list[dict]]` or normalize `loc = locations.get(comp_key)[0]` when handling detection output.
+2. **Harmonize Ambiguity State Representation in `sanity-check.py`:**
+   - Include all resolved/unambiguous single items in `existing_locations` and provide a dedicated `ambiguous_locations` mapping in JSON verdicts.
+3. **Sanitize Paths in Markdown Report Generators:**
+   - Add a helper function `_escape_md(text)` to sanitize `|`, `\n`, `` ` ``, `<` and `>` before appending paths into Markdown reports.
+4. **Implement JSON Schema Validation:**
+   - Add a shared JSON schema or validation helper for detection facts and sanity check verdicts to enforce strict data contracts across Python scripts.
