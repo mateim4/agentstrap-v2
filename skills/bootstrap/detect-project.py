@@ -87,6 +87,7 @@ markers = {
     "manifest": exists(".agentstrap", "manifest.json"),
     "config": exists(".agentstrap", "config.json"),
     "claude_md": exists("CLAUDE.md") or exists(".claude", "CLAUDE.md"),
+    "gemini_md": exists("GEMINI.md") or exists(".agents", "GEMINI.md"),
     "agents_md": bool(found["agents_md"]),
     "handoff": found["handoff"],
     "delta": found["delta"],

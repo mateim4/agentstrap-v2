@@ -27,9 +27,23 @@ except Exception: d={}
 print(d.get(sys.argv[1],"") if isinstance(d,dict) else "")' "$2" 2>/dev/null
 }
 
+# Determine the execution environment (Claude vs Antigravity) and set base paths
+as_detect_environment() {
+  if [ -n "$CLAUDE_PLUGIN_ROOT" ]; then
+    AGENT_ENV="claude"
+    START_DIR="${CLAUDE_PROJECT_DIR:-$(as_input_field "$INPUT" cwd)}"
+    [ -n "$START_DIR" ] || START_DIR="$PWD"
+  else
+    AGENT_ENV="antigravity"
+    # Parse workspacePaths from stdin JSON
+    START_DIR=$(printf '%s' "$INPUT" | python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); wp=d.get("workspacePaths", []); print(wp[0] if wp else "")' 2>/dev/null)
+    [ -n "$START_DIR" ] || START_DIR="$PWD"
+  fi
+}
+
 # Walk up from a start dir to find .agentstrap/config.json. Prints its path.
 as_find_config() {
-  local d="${1:-${CLAUDE_PROJECT_DIR:-$PWD}}"
+  local d="${1:-${START_DIR}}"
   d="$(cd "$d" 2>/dev/null && pwd)" || return 1
   while [ -n "$d" ] && [ "$d" != "/" ]; do
     [ -f "$d/.agentstrap/config.json" ] && { printf '%s\n' "$d/.agentstrap/config.json"; return 0; }
