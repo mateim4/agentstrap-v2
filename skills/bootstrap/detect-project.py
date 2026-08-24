@@ -93,7 +93,7 @@ for dirpath, dirnames, filenames in os.walk(root):
 # Only fills gaps left by Pass 1.
 STRUCTURAL = {
     "decisions_log": {
-        "dir_names": [re.compile(r"^(decisions?|adrs?|architecture[_-]decisions?)$", re.I)],
+        "dir_names": [re.compile(r"^(decisions?|adrs?|architecture([_-]decisions?)?|arch[_-]decisions?)$", re.I)],
         "file_pat": re.compile(r"^(ADR[-_]\d+|adr[-_]\d+|\d+[-_]).*\.md$", re.I),
         "min_files": 1,
     },
