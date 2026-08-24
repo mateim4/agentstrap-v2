@@ -38,16 +38,18 @@ Adaptive interview first (use AskUserQuestion; **skip anything already detected*
 3. Obsidian vault? (default: `obsidian`). Controls `continuity.obsidian_enabled`.
 4. Deployment context: `air-gapped` / `internal` / `internet-facing` (for audits).
 5. If `code` stage: confirm `version_files`, `build_command`, `test_command` (pre-fill from detected `build_files`).
+6. **Flavor Selection**: Ask the user: "Which agent environment are you configuring this project for? [Claude Code / Google Antigravity / Both]". Default to Both if they skip.
 
 Then create (copying and filling templates from the `templates/` directory under the plugin root printed in Step 1):
 
 - The `00–90` vault under `templates/vault/` (use the folder names as-is).
 - `agents.md` from `templates/agents.md.tmpl`, replacing `{{PROJECT_NAME}}`, `{{STAGE}}`, `{{VAULT_PATH}}`, `{{HANDOFF_FILE}}`, `{{DELTA_FILE}}`.
-- `CLAUDE.md` and `AGENTS.md` adapters from `templates/adapters/`.
+- Adapter files based on **Flavor Selection**:
+  - If **Claude Code** or **Both**: `CLAUDE.md` and `AGENTS.md` from `templates/adapters/`. `.claude/settings.json` with `"outputStyle": "BLUF"`.
+  - If **Google Antigravity** or **Both**: `GEMINI.md` from `templates/adapters/`. Copy `output-styles/bluf.md` to `.agents/rules/bluf.md`.
 - `HANDOFF.md` and `DELTA_TRACKING.md` from the templates (at the vault root, or `40 - Operations/` if you prefer — record the choice).
 - `Work Log.md` at the vault root from `templates/vault/Work Log.md` — the permanent session history the handoff spills into once narratives pass ~2 weeks.
 - `Credentials and secrets.md` in the foundations domain — the single place credentials live.
-- `.claude/settings.json` with `"outputStyle": "BLUF"` — pins the shipped output style to the project, so it travels with the repo instead of being configured per machine. **If the file already exists, add only that key and leave everything else alone.**
 - `.agentstrap/config.json` (validate against `templates/config.schema.json`).
 - `.agentstrap/manifest.json` (validate against `templates/manifest.schema.json`); list every path you created in `created`.
 - A `.gitattributes` line so the change log auto-unions across devices instead of conflicting:
@@ -61,12 +63,13 @@ This is the **gap-fill** path. Rules:
 
 - **Conform to existing names.** Use the detected `numbered_domains` verbatim. Do NOT create template-named duplicates (e.g. if `00 - Foundations` exists, never add `00-foundations`). Put new notes inside the existing folders.
 - Write a **gap report** to the vault for the human/team — e.g. into the existing foundations domain as `AgentStrap Status.md` (only if absent; otherwise append a dated section). Include the sanity-check table.
+- Ask for **Flavor Selection** if any adapters (`CLAUDE.md`, `GEMINI.md`) are missing.
 - For each item in `missing`, **propose** adding it and create it only on confirmation (or immediately if `--apply`):
-  - `agent_instructions` → `agents.md` (filled from template, reflecting the project) + thin `CLAUDE.md`/`AGENTS.md` adapters. Pull the existing Working Rules content into `agents.md` if a Working Rules note exists, rather than duplicating rules.
+  - `agent_instructions` → `agents.md` (filled from template, reflecting the project) + thin adapters based on selected flavor. Pull the existing Working Rules content into `agents.md` if a Working Rules note exists, rather than duplicating rules.
   - `handoff` / `delta` → place `HANDOFF.md` + `DELTA_TRACKING.md` in the vault; record their paths in config.
   - `work_log` → `Work Log.md` at the vault root. If the existing handoff already carries months of narrative, offer to move everything older than ~2 weeks into it as part of the gap-fill.
   - `credentials` → `Credentials and secrets.md` in the existing foundations domain. If credentials are currently scattered across other notes, **list where you found them** and offer to consolidate — do not move or delete anything without confirmation.
-  - `output_style` → add `"outputStyle": "BLUF"` to `.claude/settings.json`. **Merge, never overwrite** — if the file exists, add only that key. If it already pins a different style, say which one and ask before changing it; the user's existing choice wins by default.
+  - `output_style` → add `"outputStyle": "BLUF"` to `.claude/settings.json` (for Claude) and/or `.agents/rules/bluf.md` (for AGY). **Merge, never overwrite**.
   - `config` → `.agentstrap/config.json` with `continuity.vault_path` = the vault root (the git repo), `obsidian_enabled` per detection.
   - `manifest` → `.agentstrap/manifest.json` with `mode: "adopt"`, `created` listing only what you added, and `conformed_to.domains` = the existing domains.
   - Add the `.gitattributes` `DELTA_TRACKING.md merge=union` line if absent.
@@ -81,7 +84,7 @@ Read `.agentstrap/manifest.json`. Compare its `agentstrap_version` with the runn
 ## Step 5 — Finish
 
 - Summarize what was created (or, in dry-run, what would be created).
-- Remind the user: **run `claude` from this project directory** (not the home directory) so sessions are project-scoped and the continuity hooks resolve `${CLAUDE_PROJECT_DIR}` correctly.
-- Confirm the continuity hooks will now keep `HANDOFF.md` updated every turn and that on another device the `SessionStart` hook will inject it.
-- **Confirm the BLUF output style is pinned.** AgentStrap ships one (`output-styles/bluf.md`) that puts the communication rules — bottom line first, plain language, honest uncertainty — into the system prompt so they hold every turn instead of being read once and forgotten. Because `.claude/settings.json` is checked in, it applies to everyone who works in this repo on any machine — nobody configures anything. It takes effect on the **next** session; tell the user to restart and confirm via `/config` → **Output style**. It sets `keep-coding-instructions: true`, so Claude Code's built-in engineering behaviour is unchanged. Note that output styles apply to the main conversation only — sub-agents keep their own system prompt, which is why the same rules also live in `agents.md`.
+- Remind the user: run your agent (`claude` or `agy`) **from this project directory** (not the home directory) so sessions are project-scoped and the continuity hooks resolve correctly.
+- Confirm the continuity hooks will now keep `HANDOFF.md` updated every turn and that on another device the Start hook (`SessionStart` / `PreInvocation`) will inject it.
+- **Confirm the BLUF output style is pinned.** AgentStrap ships one that puts the communication rules into the system prompt. Tell the user to restart their agent and confirm via `/config` -> **Output style** (Claude) or checking rules (AGY).
 - If `is_git` is false, offer to `git init`. If `has_remote` is false, note that cross-device sync needs a remote.

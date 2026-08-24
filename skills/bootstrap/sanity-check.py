@@ -31,8 +31,8 @@ else:
 
 # Expected components: (key, label, present?)
 components = [
-    ("agent_instructions", "Always-loaded agent guidance (agents.md / CLAUDE.md)", m.get("agents_md") or m.get("claude_md")),
-    ("working_rules", "PM-first working rules", bool(m.get("working_rules")) or m.get("agents_md") or m.get("claude_md")),
+    ("agent_instructions", "Always-loaded agent guidance (agents.md / CLAUDE.md / GEMINI.md)", m.get("agents_md") or m.get("claude_md") or m.get("gemini_md")),
+    ("working_rules", "PM-first working rules", bool(m.get("working_rules")) or m.get("agents_md") or m.get("claude_md") or m.get("gemini_md")),
     ("decisions_log", "Decisions Log (append-only ADRs)", bool(m.get("decisions_log"))),
     ("open_questions", "Open Questions register", bool(m.get("open_questions"))),
     ("numbered_domains", "00–90 numbered documentation domains", bool(facts.get("numbered_domains"))),
@@ -40,7 +40,7 @@ components = [
     ("work_log", "Work Log (permanent session history the handoff spills into)", bool(m.get("work_log"))),
     ("credentials", "Credentials and secrets (the one place credentials live)", bool(m.get("credentials"))),
     ("delta", "DELTA_TRACKING.md change log", bool(m.get("delta"))),
-    ("output_style", "Output style pinned in .claude/settings.json (travels with the repo)", bool(m.get("output_style"))),
+    ("output_style", "Output style pinned via adapter (.claude/settings.json or .agents/rules/bluf.md)", bool(m.get("output_style"))), # output_style check may be claude-specific currently but logic remains the same for gap offering
     ("config", ".agentstrap/config.json (runtime config)", bool(m.get("config"))),
     ("manifest", ".agentstrap/manifest.json (install stamp)", bool(m.get("manifest"))),
 ]
