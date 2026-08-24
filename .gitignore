@@ -6,3 +6,5 @@
 # Local scratch / test artifacts
 /tmp-test/
 *.local
+__pycache__/
+*.pyc
