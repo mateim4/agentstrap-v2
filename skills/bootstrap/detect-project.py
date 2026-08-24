@@ -75,7 +75,7 @@ WANT = {
     "work_log": re.compile(r"^(work[ _-]?log|devlog|dev[ _-]?log)\.md$", re.I),
     "credentials": re.compile(r"^credentials([ _-]and[ _-]secrets)?\.md$", re.I),
 }
-found = {k: "" for k in WANT}
+found = {k: [] for k in WANT}
 SKIP = {".git", "node_modules", "target", "dist", "build", ".obsidian", "__pycache__"}
 for dirpath, dirnames, filenames in os.walk(root):
     depth = os.path.relpath(dirpath, root).count(os.sep)
@@ -85,12 +85,11 @@ for dirpath, dirnames, filenames in os.walk(root):
     dirnames[:] = [d for d in dirnames if d not in SKIP]
     for fn in filenames:
         for key, pat in WANT.items():
-            if not found[key] and pat.match(fn):
-                found[key] = os.path.relpath(os.path.join(dirpath, fn), root)
+            if pat.match(fn):
+                found[key].append(os.path.relpath(os.path.join(dirpath, fn), root))
 
 # ── Pass 2: Structural detection — directories that serve a governance function ──
 # Each entry: component key → {dir_names: regex[], file_pat: regex, min_files: int}
-# Only fills gaps left by Pass 1.
 STRUCTURAL = {
     "decisions_log": {
         "dir_names": [re.compile(r"^(decisions?|adrs?|architecture([_-]decisions?)?|arch[_-]decisions?)$", re.I)],
@@ -115,13 +114,13 @@ STRUCTURAL = {
 }
 
 # existing_locations tracks richer detail about where each component was found.
-# Format: {"path": "...", "type": "file"|"directory", "count": N}
+# Format: {"component_key": [{"path": "...", "type": "file"|"directory", "count": N}, ...]}
 existing_locations = {}
 
 # Record Pass-1 file hits into existing_locations.
-for key, path in found.items():
-    if path:
-        existing_locations[key] = {"path": path, "type": "file", "count": 1}
+for key, paths in found.items():
+    for path in paths:
+        existing_locations.setdefault(key, []).append({"path": path, "type": "file", "count": 1})
 
 # Structural walk — search depth ≤ 3 for matching directories.
 for dirpath, dirnames, filenames in os.walk(root):
@@ -132,19 +131,16 @@ for dirpath, dirnames, filenames in os.walk(root):
     dirnames[:] = [d for d in dirnames if d not in SKIP]
     dirname = os.path.basename(dirpath)
     for comp_key, spec in STRUCTURAL.items():
-        if comp_key in existing_locations:
-            continue  # already found by Pass 1 or an earlier structural hit
         if not any(pat.match(dirname) for pat in spec["dir_names"]):
             continue
         matching_files = [fn for fn in filenames if spec["file_pat"].search(fn)]
         if len(matching_files) >= spec["min_files"]:
             rel = os.path.relpath(dirpath, root)
-            found[comp_key] = rel
-            existing_locations[comp_key] = {
+            existing_locations.setdefault(comp_key, []).append({
                 "path": rel,
                 "type": "directory",
                 "count": len(matching_files),
-            }
+            })
 
 
 # ── Output style detection (Claude + Antigravity) ──
@@ -172,14 +168,14 @@ markers = {
     "config": exists(".agentstrap", "config.json"),
     "claude_md": exists("CLAUDE.md") or exists(".claude", "CLAUDE.md"),
     "gemini_md": exists("GEMINI.md") or exists(".agents", "GEMINI.md"),
-    "agents_md": bool(found["agents_md"]),
-    "handoff": found["handoff"],
-    "delta": found["delta"],
-    "decisions_log": found["decisions_log"],
-    "open_questions": found["open_questions"],
-    "working_rules": found["working_rules"],
-    "work_log": found["work_log"],
-    "credentials": found["credentials"],
+    "agents_md": bool(existing_locations.get("agents_md")),
+    "handoff": bool(existing_locations.get("handoff")),
+    "delta": bool(existing_locations.get("delta")),
+    "decisions_log": bool(existing_locations.get("decisions_log")),
+    "open_questions": bool(existing_locations.get("open_questions")),
+    "working_rules": bool(existing_locations.get("working_rules")),
+    "work_log": bool(existing_locations.get("work_log")),
+    "credentials": bool(existing_locations.get("credentials")),
     "output_style": output_style(),
 }
 

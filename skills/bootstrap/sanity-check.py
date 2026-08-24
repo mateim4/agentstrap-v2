@@ -23,6 +23,9 @@ facts = json.loads(subprocess.run([sys.executable, os.path.join(here, "detect-pr
 m = facts.get("markers", {})
 locations = facts.get("existing_locations", {})
 
+ambiguities = {k: v for k, v in locations.items() if len(v) > 1}
+singles = {k: v[0] for k, v in locations.items() if len(v) == 1}
+
 if m.get("manifest"):
     mode = "stamped"
 elif facts.get("has_methodology"):
@@ -30,17 +33,16 @@ elif facts.get("has_methodology"):
 else:
     mode = "greenfield"
 
-
 def _location_note(key):
-    """Return a human-readable suffix like ' (directory, 20 files at docs/decisions)' when
-    structural detection found the component, or '' when it was a simple file match."""
-    loc = locations.get(key)
+    """Return a human-readable suffix for the component status."""
+    if key in ambiguities:
+        return f" (⚠ {len(ambiguities[key])} candidates found)"
+    loc = singles.get(key)
     if not loc:
         return ""
     if loc["type"] == "directory":
         return f" (directory: `{loc['path']}/`, {loc['count']} file{'s' if loc['count'] != 1 else ''})"
     return f" (file: `{loc['path']}`)"
-
 
 # Expected components: (key, label, present?)
 components = [
@@ -85,6 +87,16 @@ for key, label, ok in components:
     else:
         lines.append(f"| {label} | ✗ missing |")
 lines.append("")
+
+if ambiguities:
+    lines.append("## ⚠ Ambiguities Detected")
+    lines.append("_Multiple candidates found for the same component. These must be resolved._")
+    for k, locs in ambiguities.items():
+        lines.append(f"- **{k}**:")
+        for loc in locs:
+            lines.append(f"  - `{loc['path']}` ({loc['type']})")
+    lines.append("")
+
 if mode == "greenfield":
     lines.append("**Recommendation:** greenfield — run the full bootstrap scaffold.")
 elif mode == "adopt":
@@ -96,14 +108,14 @@ elif mode == "adopt":
         for key, label, ok in missing:
             lines.append(f"- [ ] {label}")
     if present:
-        structurally_found = [c for c in present if locations.get(c[0], {}).get("type") == "directory"]
+        structurally_found = [c for c in present if singles.get(c[0], {}).get("type") == "directory"]
         if structurally_found:
             lines.append("")
             lines.append("### Existing components (found via structural detection)")
             lines.append("_These were detected as directory-based equivalents. AgentStrap will link to them,_")
             lines.append("_not create duplicates._")
             for key, label, ok in structurally_found:
-                loc = locations[key]
+                loc = singles[key]
                 lines.append(f"- ✓ {label} → `{loc['path']}/` ({loc['count']} file{'s' if loc['count'] != 1 else ''})")
 else:
     lines.append("**Recommendation:** stamped — AgentStrap already applied. Verify the manifest version and "
@@ -113,7 +125,8 @@ report = "\n".join(lines)
 verdict = {"mode": mode, "missing": [c[0] for c in missing], "present": [c[0] for c in present],
            "numbered_domains": facts.get("numbered_domains", []), "obsidian": facts.get("obsidian", False),
            "stage_guess": facts.get("stage_guess"), "is_git": facts.get("is_git"), "has_remote": facts.get("has_remote"),
-           "existing_locations": locations}
+           "ambiguities": ambiguities,
+           "existing_locations": singles}
 
 print(report)
 print("---JSON---")

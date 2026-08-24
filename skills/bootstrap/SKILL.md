@@ -29,6 +29,18 @@ Show the user the report. Then branch on `mode`:
 
 Unless the user passed `--apply`, treat this as a **dry run**: present exactly what you would create and ask for confirmation (use AskUserQuestion or a clear yes/no) before writing anything.
 
+## Step 1.5 — Resolve Ambiguities
+
+If the JSON verdict contains any `ambiguities` (multiple file/directory candidates for the same component), you **MUST** resolve them before proceeding to the scaffold/adopt modes.
+For each ambiguous component:
+1. Stop and ask the user a multiple-choice question: "Multiple candidates found for [component]. Which one should be the canonical version?" List the paths.
+2. Ask a follow-up: "What should be done with the duplicates?" Options:
+   - Archive them (move to `.agentstrap/archive/<timestamp>/`)
+   - Delete them
+   - Ignore (leave them in place, but AgentStrap will only track the canonical one)
+3. Execute the user's choice using shell commands.
+4. **Re-run `sanity-check.py`** to get a clean verdict (with no ambiguities) before proceeding.
+
 ## Step 2 — Greenfield scaffold
 
 Adaptive interview first (use AskUserQuestion; **skip anything already detected** — don't re-ask stage if `stage_guess` is confident, don't ask about Obsidian if `obsidian` is true):
