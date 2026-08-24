@@ -62,16 +62,17 @@ Then Step 5.
 This is the **gap-fill** path. Rules:
 
 - **Conform to existing names.** Use the detected `numbered_domains` verbatim. Do NOT create template-named duplicates (e.g. if `00 - Foundations` exists, never add `00-foundations`). Put new notes inside the existing folders.
+- **Respect structural detections.** The JSON verdict includes `existing_locations` — a dict mapping component keys to `{"path": "...", "type": "file"|"directory", "count": N}`. When a component was found structurally (type = "directory"), it means the project already has this governance function in a directory-based layout (e.g. `docs/decisions/` with individual ADR files instead of a single `Decisions Log.md`). **Do not create a duplicate monolithic file.** Instead, record the existing path in `.agentstrap/config.json` under `existing_locations` so the continuity hooks and other skills know where to find it.
 - Write a **gap report** to the vault for the human/team — e.g. into the existing foundations domain as `AgentStrap Status.md` (only if absent; otherwise append a dated section). Include the sanity-check table.
 - Ask for **Flavor Selection** if any adapters (`CLAUDE.md`, `GEMINI.md`) are missing.
 - For each item in `missing`, **propose** adding it and create it only on confirmation (or immediately if `--apply`):
   - `agent_instructions` → `agents.md` (filled from template, reflecting the project) + thin adapters based on selected flavor. Pull the existing Working Rules content into `agents.md` if a Working Rules note exists, rather than duplicating rules.
-  - `handoff` / `delta` → place `HANDOFF.md` + `DELTA_TRACKING.md` in the vault; record their paths in config.
-  - `work_log` → `Work Log.md` at the vault root. If the existing handoff already carries months of narrative, offer to move everything older than ~2 weeks into it as part of the gap-fill.
+  - `handoff` / `delta` → place `HANDOFF.md` + `DELTA_TRACKING.md` in the vault; record their paths in config. **Exception:** if `existing_locations.handoff` shows a directory-based handoff already exists, skip `HANDOFF.md` creation and record the existing path instead.
+  - `work_log` → `Work Log.md` at the vault root. If the existing handoff already carries months of narrative, offer to move everything older than ~2 weeks into it as part of the gap-fill. **Exception:** if `existing_locations.work_log` already points to an existing devlog/work-log, skip creation and record the existing path.
   - `credentials` → `Credentials and secrets.md` in the existing foundations domain. If credentials are currently scattered across other notes, **list where you found them** and offer to consolidate — do not move or delete anything without confirmation.
   - `output_style` → add `"outputStyle": "BLUF"` to `.claude/settings.json` (for Claude) and/or `.agents/rules/bluf.md` (for AGY). **Merge, never overwrite**.
-  - `config` → `.agentstrap/config.json` with `continuity.vault_path` = the vault root (the git repo), `obsidian_enabled` per detection.
-  - `manifest` → `.agentstrap/manifest.json` with `mode: "adopt"`, `created` listing only what you added, and `conformed_to.domains` = the existing domains.
+  - `config` → `.agentstrap/config.json` with `continuity.vault_path` = the vault root (the git repo), `obsidian_enabled` per detection, and `existing_locations` = the structural detection results (so other tools know where each governance component lives).
+  - `manifest` → `.agentstrap/manifest.json` with `mode: "adopt"`, `created` listing only what you added, `linked` listing components that were found structurally and linked rather than created, and `conformed_to.domains` = the existing domains.
   - Add the `.gitattributes` `DELTA_TRACKING.md merge=union` line if absent.
 - **Touch nothing else.** Working Rules, Decisions Log, Open Questions, Wave Q&A, and all existing notes are left exactly as they are.
 

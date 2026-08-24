@@ -21,6 +21,7 @@ root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("CLA
 facts = json.loads(subprocess.run([sys.executable, os.path.join(here, "detect-project.py"), root],
                                   capture_output=True, text=True).stdout or "{}")
 m = facts.get("markers", {})
+locations = facts.get("existing_locations", {})
 
 if m.get("manifest"):
     mode = "stamped"
@@ -29,18 +30,30 @@ elif facts.get("has_methodology"):
 else:
     mode = "greenfield"
 
+
+def _location_note(key):
+    """Return a human-readable suffix like ' (directory, 20 files at docs/decisions)' when
+    structural detection found the component, or '' when it was a simple file match."""
+    loc = locations.get(key)
+    if not loc:
+        return ""
+    if loc["type"] == "directory":
+        return f" (directory: `{loc['path']}/`, {loc['count']} file{'s' if loc['count'] != 1 else ''})"
+    return f" (file: `{loc['path']}`)"
+
+
 # Expected components: (key, label, present?)
 components = [
     ("agent_instructions", "Always-loaded agent guidance (agents.md / CLAUDE.md / GEMINI.md)", m.get("agents_md") or m.get("claude_md") or m.get("gemini_md")),
     ("working_rules", "PM-first working rules", bool(m.get("working_rules")) or m.get("agents_md") or m.get("claude_md") or m.get("gemini_md")),
-    ("decisions_log", "Decisions Log (append-only ADRs)", bool(m.get("decisions_log"))),
+    ("decisions_log", "Decisions / ADRs", bool(m.get("decisions_log"))),
     ("open_questions", "Open Questions register", bool(m.get("open_questions"))),
     ("numbered_domains", "00–90 numbered documentation domains", bool(facts.get("numbered_domains"))),
-    ("handoff", "HANDOFF.md continuity file (~2-week window)", bool(m.get("handoff"))),
-    ("work_log", "Work Log (permanent session history the handoff spills into)", bool(m.get("work_log"))),
+    ("handoff", "Handoff / continuity state", bool(m.get("handoff"))),
+    ("work_log", "Work Log / devlog", bool(m.get("work_log"))),
     ("credentials", "Credentials and secrets (the one place credentials live)", bool(m.get("credentials"))),
     ("delta", "DELTA_TRACKING.md change log", bool(m.get("delta"))),
-    ("output_style", "Output style pinned via adapter (.claude/settings.json or .agents/rules/bluf.md)", bool(m.get("output_style"))), # output_style check may be claude-specific currently but logic remains the same for gap offering
+    ("output_style", "Output style pinned via adapter (.claude/settings.json or .agents/rules/bluf.md)", bool(m.get("output_style"))),
     ("config", ".agentstrap/config.json (runtime config)", bool(m.get("config"))),
     ("manifest", ".agentstrap/manifest.json (install stamp)", bool(m.get("manifest"))),
 ]
@@ -66,17 +79,32 @@ lines.append("")
 lines.append("| Component | Status |")
 lines.append("| --- | --- |")
 for key, label, ok in components:
-    lines.append(f"| {label} | {'✓ present' if ok else '✗ missing'} |")
+    if ok:
+        note = _location_note(key)
+        lines.append(f"| {label} | ✓ present{note} |")
+    else:
+        lines.append(f"| {label} | ✗ missing |")
 lines.append("")
 if mode == "greenfield":
     lines.append("**Recommendation:** greenfield — run the full bootstrap scaffold.")
 elif mode == "adopt":
     lines.append("**Recommendation:** adopt — keep all existing content untouched; add ONLY the missing "
                  "components below, conforming to your existing folder naming. Nothing is overwritten.")
-    lines.append("")
-    lines.append("### Gaps to offer (additive only)")
-    for key, label, ok in missing:
-        lines.append(f"- [ ] {label}")
+    if missing:
+        lines.append("")
+        lines.append("### Gaps to offer (additive only)")
+        for key, label, ok in missing:
+            lines.append(f"- [ ] {label}")
+    if present:
+        structurally_found = [c for c in present if locations.get(c[0], {}).get("type") == "directory"]
+        if structurally_found:
+            lines.append("")
+            lines.append("### Existing components (found via structural detection)")
+            lines.append("_These were detected as directory-based equivalents. AgentStrap will link to them,_")
+            lines.append("_not create duplicates._")
+            for key, label, ok in structurally_found:
+                loc = locations[key]
+                lines.append(f"- ✓ {label} → `{loc['path']}/` ({loc['count']} file{'s' if loc['count'] != 1 else ''})")
 else:
     lines.append("**Recommendation:** stamped — AgentStrap already applied. Verify the manifest version and "
                  "repair only missing/ drifted components.")
@@ -84,7 +112,8 @@ else:
 report = "\n".join(lines)
 verdict = {"mode": mode, "missing": [c[0] for c in missing], "present": [c[0] for c in present],
            "numbered_domains": facts.get("numbered_domains", []), "obsidian": facts.get("obsidian", False),
-           "stage_guess": facts.get("stage_guess"), "is_git": facts.get("is_git"), "has_remote": facts.get("has_remote")}
+           "stage_guess": facts.get("stage_guess"), "is_git": facts.get("is_git"), "has_remote": facts.get("has_remote"),
+           "existing_locations": locations}
 
 print(report)
 print("---JSON---")
