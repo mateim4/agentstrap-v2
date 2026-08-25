@@ -1,5 +1,6 @@
 {
     "$schema": "https://antigravity.google/schemas/v1/plugin.json",
     "name": "agentstrap-v2",
+    "version": "0.3.0",
     "description": "AgentStrap project management, review swarms, and continuity engine."
 }

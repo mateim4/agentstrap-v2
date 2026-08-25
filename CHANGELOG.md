@@ -5,6 +5,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-08-25
+
+Theme: **Migration, Ambiguity Resolution, and Security Hardening.**
+
+### Added
+- **Structural Detection & Normalization**: `detect-project.py` now correctly identifies directory-based governance patterns. Added `normalize.py` to seamlessly migrate existing legacy doc structures into the canonical AgentStrap `00-90` domain structure with dry-run and archive capabilities.
+- **Ambiguity Detection**: The sanity checker now aggressively flags duplicate component candidates (e.g. `handoff.md` vs `archive/old/handoff.md`) and halts bootstrap to present a resolution menu to the user.
+- **Extensive Adversarial QA Hardening**: Resolved numerous edge cases discovered via autonomous AI red-teaming (Jules):
+  - Fixed persistent prompt injection vectors in template substitutions (`{{PROJECT_NAME}}`).
+  - Patched path traversal vulnerabilities (`../`) across all configuration properties.
+  - Eliminated hybrid schema invalidation in lifecycle hooks and fixed relative path execution issues across environments.
+  - Stopped recursive git-diff noise loops by loosening automatic turn-by-turn narrative handoff refreshes.
+- **Antigravity Compatibility**: Replaced the Claude-specific `@agents.md` injection syntax with Antigravity-native auto-discovery paths (`.agents/rules/agents.md`).
+
 ## [0.2.1] — 2026-08-10
 
 ### Fixed
