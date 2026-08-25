@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-08-25
+
+### Fixed
+- **Windows / Claude Code strict shell block**: Removed the shell parameter expansion fallback (`:-$PWD`) from the inline `python3 sanity-check.py` and `normalize.py` calls in `SKILL.md` to prevent Claude Code's security layer from blocking execution with a "Contains expansion" error. The python scripts gracefully default to the project directory natively.
+
 ## [0.3.1] — 2026-08-25
 
 ### Fixed

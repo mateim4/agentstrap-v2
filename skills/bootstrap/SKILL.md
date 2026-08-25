@@ -13,13 +13,13 @@ You are setting up — or sanity-checking — an AgentStrap workspace in the cur
 
 Sanity check output:
 
-!`python3 "${CLAUDE_SKILL_DIR}/sanity-check.py" "${CLAUDE_PROJECT_DIR:-$PWD}"`
+!`python3 "${CLAUDE_SKILL_DIR}/sanity-check.py"`
 
 Plugin root (use this absolute path to read templates in later steps):
 
 !`python3 -c "import os,sys; print(os.path.normpath(os.path.join(sys.argv[1], '..', '..')))" "${CLAUDE_SKILL_DIR}"`
 
-The sanity output has a human report, then a line `---JSON---`, then a JSON verdict with `mode`, `missing`, `present`, `numbered_domains`, `obsidian`, `stage_guess`, `is_git`, `has_remote`. Parse the JSON. If the injection above did not produce output, run it yourself: `python3 "${CLAUDE_SKILL_DIR}/sanity-check.py" "${CLAUDE_PROJECT_DIR:-$PWD}"`.
+The sanity output has a human report, then a line `---JSON---`, then a JSON verdict with `mode`, `missing`, `present`, `numbered_domains`, `obsidian`, `stage_guess`, `is_git`, `has_remote`. Parse the JSON. If the injection above did not produce output, run it yourself: `python3 "${CLAUDE_SKILL_DIR}/sanity-check.py"`.
 
 Show the user the report. Then branch on `mode`:
 
@@ -76,7 +76,7 @@ This is the **gap-fill** path. Rules:
 - **Conform to existing names.** Use the detected `numbered_domains` verbatim. Do NOT create template-named duplicates (e.g. if `00 - Foundations` exists, never add `00-foundations`). Put new notes inside the existing folders.
 - **Respect structural detections or offer normalization.** The JSON verdict includes `existing_locations` — a dict mapping component keys to `{"path": "...", "type": "file"|"directory", "count": N}`. When existing components are found in non-standard locations, you must offer the user a choice:
   1. **Link in place (default):** Do not create a duplicate monolithic file. Record the existing path in `.agentstrap/config.json` under `existing_locations` so hooks know where to find it.
-  2. **Normalize structure (if requested):** Offer to migrate their scattered governance files into a canonical AgentStrap `00-90` domain structure. Run `python3 "${CLAUDE_SKILL_DIR}/normalize.py" "${CLAUDE_PROJECT_DIR:-$PWD}"` to show them the dry-run plan.
+  2. **Normalize structure (if requested):** Offer to migrate their scattered governance files into a canonical AgentStrap `00-90` domain structure. Run `python3 "${CLAUDE_SKILL_DIR}/normalize.py"` to show them the dry-run plan.
      - If they approve the moves, run the script with `--execute`.
      - **CRITICAL**: The script can also archive emptied old directories. This requires explicit user sign-off. If they approve, run with `--archive` and inform them the files are in `.agentstrap/archive/`.
 - Write a **gap report** to the vault for the human/team — e.g. into the existing foundations domain as `AgentStrap Status.md` (only if absent; otherwise append a dated section). Include the sanity-check table.
