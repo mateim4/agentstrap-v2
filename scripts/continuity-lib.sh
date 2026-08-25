@@ -57,7 +57,7 @@ as_cfg() {
   python3 - "$1" "$2" "$3" <<'PY' 2>/dev/null || printf '%s' "$3"
 import json,sys
 cf,key,default=sys.argv[1],sys.argv[2],sys.argv[3]
-try: d=json.load(open(cf))
+try: d=json.load(open(cf, encoding='utf-8', errors='replace'))
 except Exception: print(default); sys.exit(0)
 cur=d
 for part in key.split('.'):

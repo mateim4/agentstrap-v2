@@ -17,7 +17,7 @@ Sanity check output:
 
 Plugin root (use this absolute path to read templates in later steps):
 
-!`python3 -c "import os,sys; print(os.path.normpath(os.path.join(sys.argv[1], '..', '..')))" "${CLAUDE_SKILL_DIR}"`
+!`python3 -c "import os,sys; print(os.path.normpath(os.path.join(sys.argv[1], '..', '..')).replace('\\\\', '/'))" "${CLAUDE_SKILL_DIR}"`
 
 The sanity output has a human report, then a line `---JSON---`, then a JSON verdict with `mode`, `missing`, `present`, `numbered_domains`, `obsidian`, `stage_guess`, `is_git`, `has_remote`. Parse the JSON. If the injection above did not produce output, run it yourself: `python3 "${CLAUDE_SKILL_DIR}/sanity-check.py"`.
 

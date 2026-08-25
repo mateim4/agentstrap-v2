@@ -18,7 +18,7 @@ import json, os, re, subprocess, sys
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()).replace("\\", "/")
 
 
 def run(*args):
@@ -61,7 +61,7 @@ try:
         for name in sorted(os.listdir(search_dir)):
             full = os.path.join(search_dir, name)
             if os.path.isdir(full) and re.match(r"^\d{2}[ _-]", name):
-                rel = os.path.relpath(full, root)
+                rel = os.path.relpath(full, root).replace("\\", "/")
                 if rel not in numbered:
                     numbered.append(rel)
 except OSError:
@@ -89,7 +89,7 @@ for dirpath, dirnames, filenames in os.walk(root):
     for fn in filenames:
         for key, pat in WANT.items():
             if pat.match(fn):
-                found[key].append(os.path.relpath(os.path.join(dirpath, fn), root))
+                found[key].append(os.path.relpath(os.path.join(dirpath, fn), root).replace("\\", "/"))
 
 # ── Pass 2: Structural detection — directories that serve a governance function ──
 # Each entry: component key → {dir_names: regex[], file_pat: regex, min_files: int}
@@ -138,7 +138,7 @@ for dirpath, dirnames, filenames in os.walk(root):
             continue
         matching_files = [fn for fn in filenames if spec["file_pat"].search(fn)]
         if len(matching_files) >= spec["min_files"]:
-            rel = os.path.relpath(dirpath, root)
+            rel = os.path.relpath(dirpath, root).replace("\\", "/")
             existing_locations.setdefault(comp_key, []).append({
                 "path": rel,
                 "type": "directory",
@@ -152,7 +152,7 @@ def output_style():
     and Antigravity (.agents/rules/bluf.md) locations."""
     # Claude Code
     try:
-        with open(os.path.join(root, ".claude", "settings.json")) as fh:
+        with open(os.path.join(root, ".claude", "settings.json"), encoding="utf-8") as fh:
             style = json.load(fh).get("outputStyle") or ""
             if style:
                 return style

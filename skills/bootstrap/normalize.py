@@ -34,7 +34,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 # ── Argument parsing (intentionally simple — no argparse dependency) ──────────
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 flags = {a for a in sys.argv[1:] if a.startswith("--")}
-root = os.path.abspath(args[0] if args else os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+root = os.path.abspath(args[0] if args else os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()).replace("\\", "/")
 do_execute = "--execute" in flags or "--archive" in flags
 do_archive = "--archive" in flags
 
@@ -147,7 +147,7 @@ def build_plan(facts):
         if canonical_parent == ".":
             canonical_path = src_basename
         else:
-            canonical_path = os.path.join(canonical_parent, src_basename)
+            canonical_path = os.path.join(canonical_parent, src_basename).replace("\\", "/")
 
         # Normalise for comparison.
         src_norm = os.path.normpath(src_path)
@@ -220,8 +220,8 @@ def archive_dirs(empty_dirs, plan):
 
     archived = []
     for d in empty_dirs:
-        rel = os.path.relpath(d, root)
-        dst = os.path.join(archive_root, rel)
+        rel = os.path.relpath(d, root).replace("\\", "/")
+        dst = os.path.join(archive_root, rel).replace("\\", "/")
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.move(d, dst)
         archived.append(rel)
@@ -242,7 +242,7 @@ def archive_dirs(empty_dirs, plan):
     lines.append("## Archived empty directories")
     lines.append("")
     for a in archived:
-        lines.append(f"- `{a}` → `{os.path.relpath(os.path.join(archive_root, a), root)}`")
+        lines.append(f"- `{a}` → `{os.path.relpath(os.path.join(archive_root, a), root).replace('\\', '/')}`")
     if plan["conflicts"]:
         lines.append("")
         lines.append("## Conflicts (not moved)")
@@ -250,10 +250,10 @@ def archive_dirs(empty_dirs, plan):
         for c in plan["conflicts"]:
             lines.append(f"- `{c['from']}` → `{c['to']}`: {c['reason']}")
     lines.append("")
-    with open(manifest_path, "w") as fh:
+    with open(manifest_path, "w", encoding="utf-8") as fh:
         fh.write("\n".join(lines))
 
-    return os.path.relpath(archive_root, root)
+    return os.path.relpath(archive_root, root).replace("\\", "/")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -307,7 +307,7 @@ else:
         "files_moved": plan["moves"],
         "conflicts": plan["conflicts"],
         "skipped": plan["skipped"],
-        "emptied_dirs": [os.path.relpath(d, root) for d in empty_dirs],
+        "emptied_dirs": [os.path.relpath(d, root).replace("\\", "/") for d in empty_dirs],
     }
 
     if do_archive and empty_dirs:

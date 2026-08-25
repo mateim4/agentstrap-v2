@@ -19,7 +19,7 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 here = os.path.dirname(os.path.abspath(__file__))
-root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()).replace("\\", "/")
 
 facts = json.loads(subprocess.run([sys.executable, os.path.join(here, "detect-project.py"), root],
                                   capture_output=True, text=True).stdout or "{}")
