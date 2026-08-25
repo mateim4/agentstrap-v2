@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-08-25
+
+### Fixed
+- **Windows Path Traversal Crash**: Replaced a `cd ../..` bash command in `SKILL.md` with an arithmetic Python path resolution to prevent Claude Code's security layer from hard-blocking the `/agentstrap:bootstrap` command on Windows (Git Bash).
+
 ## [0.3.0] — 2026-08-25
 
 Theme: **Migration, Ambiguity Resolution, and Security Hardening.**
