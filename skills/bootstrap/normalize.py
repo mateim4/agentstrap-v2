@@ -26,6 +26,9 @@ Exit codes:
 import json, os, re, shutil, subprocess, sys
 from datetime import datetime, timezone
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 here = os.path.dirname(os.path.abspath(__file__))
 
 # ── Argument parsing (intentionally simple — no argparse dependency) ──────────

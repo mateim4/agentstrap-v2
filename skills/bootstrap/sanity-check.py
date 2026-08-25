@@ -15,6 +15,9 @@ Usage: sanity-check.py [project_dir]
 """
 import json, os, subprocess, sys
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 here = os.path.dirname(os.path.abspath(__file__))
 root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
 

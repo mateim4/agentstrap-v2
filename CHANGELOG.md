@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.3.3] — 2026-08-25
+
+### Fixed
+- **Windows `cp1252` Encoding Crash**: Fixed a `UnicodeEncodeError` that crashed `sanity-check.py` and `normalize.py` on Windows machines when trying to print `✓` checkmarks or JSON payloads to a non-UTF8 console. The scripts now programmatically force `sys.stdout` to UTF-8.
+
 ## [0.3.2] — 2026-08-25
 
 ### Fixed
