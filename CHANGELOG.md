@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.3.4] — 2026-08-26
+
+### Fixed
+- **Cross-Platform Compatibility**: Fully normalized Windows path separators (`\` to `/`) across `detect-project.py`, `normalize.py`, and `sanity-check.py` to prevent JSON path mismatch errors in Claude Code template resolution. Forced `utf-8` encoding on all internal file reads and writes (like `MIGRATION.md`) to prevent OS-level locale crashes. (Fixed via autonomous QA agent Jules).
+
 ## [0.3.3] — 2026-08-25
 
 ### Fixed
