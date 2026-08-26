@@ -51,13 +51,10 @@ def parse_json_verdict(output):
 
 def test_contract_mismatch_detect_to_normalize(temp_project):
     """
-    CRITICAL BUG: detect-project.py outputs `existing_locations` as:
+    Verify contract alignment between detect-project.py and normalize.py:
+    detect-project.py outputs `existing_locations` as:
         {"handoff": [{"path": "handoff.md", "type": "file", "count": 1}]}
-    while normalize.py expects `existing_locations` as:
-        {"handoff": {"path": "handoff.md", "type": "file", "count": 1}}
-
-    When normalize.py runs `_detect()`, it fails with:
-        TypeError: list indices must be integers or slices, not str
+    normalize.py processes `existing_locations` correctly without TypeError or schema mismatches.
     """
     # Create a detected governance file
     handoff_file = temp_project / "handoff.md"
@@ -70,12 +67,12 @@ def test_contract_mismatch_detect_to_normalize(temp_project):
     assert "existing_locations" in facts
     assert isinstance(facts["existing_locations"]["handoff"], list)
 
-    # Run normalize.py (dry run plan) -> Expecting crash due to contract mismatch
+    # Run normalize.py (dry run plan) -> Expecting success
     norm_out, norm_err, norm_code = run_py(NORMALIZE_PY, temp_project)
 
-    # Validate that normalize.py fails with TypeError due to data model mismatch
-    assert norm_code != 0
-    assert "TypeError: list indices must be integers or slices, not str" in norm_err
+    # Validate that normalize.py executes cleanly without contract errors
+    assert norm_code == 0
+    assert "Structure Normalisation Plan" in norm_out
 
 
 # ── 2. STATE CONTRADICTION & AMBIGUITY TESTS ────────────────────────────────
@@ -109,11 +106,12 @@ def test_sanity_check_ambiguity_verdict_contradiction(temp_project):
     assert "decisions_log" in verdict["ambiguities"]
     assert len(verdict["ambiguities"]["decisions_log"]) == 2
 
-    # State contradiction check: present says yes, but existing_locations key is missing!
-    assert "decisions_log" not in verdict["existing_locations"], (
-        "Ambiguous component should either be resolved or present in existing_locations as list, "
-        "not silently dropped from existing_locations while marked as present."
+    # State consistency check: ambiguous component is present in existing_locations as list
+    assert "decisions_log" in verdict["existing_locations"], (
+        "Ambiguous component should be present in existing_locations as list matching ambiguities."
     )
+    assert isinstance(verdict["existing_locations"]["decisions_log"], list)
+    assert len(verdict["existing_locations"]["decisions_log"]) == 2
 
 
 # ── 3. FILENAME INJECTION & SANITIZATION TESTS ─────────────────────────────

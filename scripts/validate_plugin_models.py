@@ -14,7 +14,7 @@ import sys
 import json
 import subprocess
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..")).replace("\\", "/")
 
 def log_pass(msg):
     print(f"[PASS] {msg}")
@@ -140,7 +140,7 @@ def test_bash_script_syntax():
     sh_files = [f for f in os.listdir(scripts_dir) if f.endswith(".sh")]
     for sh in sh_files:
         sh_path = os.path.join(scripts_dir, sh)
-        res = subprocess.run(["bash", "-n", sh_path], capture_output=True, text=True)
+        res = subprocess.run(["bash", "-n", sh_path], capture_output=True, text=True, encoding="utf-8", errors="replace")
         if res.returncode == 0:
             log_pass(f"Bash syntax check passed: scripts/{sh}")
         else:
@@ -163,6 +163,8 @@ def test_hook_environment_execution():
         input=input_json,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         env=env_agy
     )
 

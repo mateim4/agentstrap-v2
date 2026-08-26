@@ -42,7 +42,7 @@ import json,sys
 p=sys.argv[1] if len(sys.argv)>1 else ""
 msg=""
 try:
-    for line in open(p):
+    for line in open(p, encoding='utf-8', errors='replace'):
         try: o=json.loads(line)
         except Exception: continue
         m=o.get("message",{}) if isinstance(o,dict) else {}
@@ -79,7 +79,7 @@ auto=(f"{START}\n"
       f"- Updated: {now}\n- Machine: {host}\n- Branch: {branch}\n"
       f"- Uncommitted files: {changed}\n- Last request: {lastuser}\n"
       f"- Change log: see {drel}\n{END}")
-try: txt=open(path).read()
+try: txt=open(path, encoding='utf-8', errors='replace').read()
 except FileNotFoundError: txt=None
 if txt is None or START not in txt:
     narrative=("# Handoff — where we left off\n\n"
@@ -95,7 +95,7 @@ else:
     pre=txt.split(START)[0]
     post=txt.split(END,1)[1] if END in txt else "\n"
     txt=pre+auto+post
-open(path,"w").write(txt)
+open(path,"w", encoding='utf-8', errors='replace').write(txt)
 PY
 
     # Push only if obsidian-git is NOT the active committer
